@@ -1,0 +1,216 @@
+package xarf
+
+import (
+	"encoding/json"
+	"fmt"
+	"time"
+)
+
+// Parser handles parsing and basic validation of XARF reports
+type Parser struct {
+	strict bool
+	errors []string
+}
+
+// NewParser creates a new Parser instance
+func NewParser(strict bool) *Parser {
+	return &Parser{
+		strict: strict,
+		errors: make([]string, 0),
+	}
+}
+
+// Parse parses a XARF report from JSON bytes
+func (p *Parser) Parse(data []byte) (interface{}, error) {
+	p.errors = p.errors[:0]
+
+	// First parse into a map to determine category
+	var rawData map[string]interface{}
+	if err := json.Unmarshal(data, &rawData); err != nil {
+		return nil, NewParseError("invalid JSON", err)
+	}
+
+	// Validate basic structure
+	if !p.validateStructure(rawData) {
+		if p.strict {
+			return nil, NewValidationError("validation failed", p.errors)
+		}
+	}
+
+	// Parse based on category
+	category, ok := rawData["category"].(string)
+	if !ok {
+		return nil, NewParseError("category field missing or invalid", nil)
+	}
+
+	return p.parseByCategory(data, Category(category))
+}
+
+// ParseString parses a XARF report from a JSON string
+func (p *Parser) ParseString(jsonStr string) (interface{}, error) {
+	return p.Parse([]byte(jsonStr))
+}
+
+// parseByCategory parses report based on its category
+func (p *Parser) parseByCategory(data []byte, category Category) (interface{}, error) {
+	switch category {
+	case CategoryMessaging:
+		var report MessagingReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse messaging report", err)
+		}
+		return &report, nil
+
+	case CategoryConnection:
+		var report ConnectionReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse connection report", err)
+		}
+		return &report, nil
+
+	case CategoryContent:
+		var report ContentReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse content report", err)
+		}
+		return &report, nil
+
+	case CategoryAbuse:
+		var report AbusiveReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse abuse report", err)
+		}
+		return &report, nil
+
+	case CategoryVulnerability:
+		var report VulnerabilityReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse vulnerability report", err)
+		}
+		return &report, nil
+
+	case CategoryCopyright:
+		var report CopyrightReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse copyright report", err)
+		}
+		return &report, nil
+
+	case CategoryInfrastructure:
+		var report InfrastructureReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse infrastructure report", err)
+		}
+		return &report, nil
+
+	case CategoryReputation:
+		var report ReputationReport
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse reputation report", err)
+		}
+		return &report, nil
+
+	default:
+		// Fall back to base report
+		var report Report
+		if err := json.Unmarshal(data, &report); err != nil {
+			return nil, NewParseError("failed to parse report", err)
+		}
+		return &report, nil
+	}
+}
+
+// validateStructure validates the basic XARF structure
+func (p *Parser) validateStructure(data map[string]interface{}) bool {
+	requiredFields := []string{
+		"xarf_version",
+		"report_id",
+		"timestamp",
+		"reporter",
+		"source_identifier",
+		"category",
+		"type",
+		"evidence_source",
+	}
+
+	// Check required fields
+	for _, field := range requiredFields {
+		if _, ok := data[field]; !ok {
+			p.errors = append(p.errors, fmt.Sprintf("missing required field: %s", field))
+			return false
+		}
+	}
+
+	// Check XARF version
+	if version, ok := data["xarf_version"].(string); !ok || version != XARFVersion {
+		p.errors = append(p.errors, fmt.Sprintf("unsupported XARF version: %v", data["xarf_version"]))
+		return false
+	}
+
+	// Validate reporter structure
+	reporter, ok := data["reporter"].(map[string]interface{})
+	if !ok {
+		p.errors = append(p.errors, "reporter must be an object")
+		return false
+	}
+
+	reporterRequired := []string{"contact", "type"}
+	for _, field := range reporterRequired {
+		if _, ok := reporter[field]; !ok {
+			p.errors = append(p.errors, fmt.Sprintf("missing reporter field: %s", field))
+			return false
+		}
+	}
+
+	// Validate reporter type
+	reporterType, _ := reporter["type"].(string)
+	validTypes := map[string]bool{
+		"automated": true,
+		"manual":    true,
+		"hybrid":    true,
+	}
+	if !validTypes[reporterType] {
+		p.errors = append(p.errors, fmt.Sprintf("invalid reporter type: %s", reporterType))
+		return false
+	}
+
+	// Validate timestamp format
+	timestampStr, ok := data["timestamp"].(string)
+	if !ok {
+		p.errors = append(p.errors, "timestamp must be a string")
+		return false
+	}
+
+	// Try parsing timestamp
+	if _, err := time.Parse(time.RFC3339, timestampStr); err != nil {
+		p.errors = append(p.errors, fmt.Sprintf("invalid timestamp format: %s", timestampStr))
+		return false
+	}
+
+	return true
+}
+
+// Validate validates a XARF report without fully parsing it
+func (p *Parser) Validate(data []byte) bool {
+	p.errors = p.errors[:0]
+
+	var rawData map[string]interface{}
+	if err := json.Unmarshal(data, &rawData); err != nil {
+		p.errors = append(p.errors, fmt.Sprintf("invalid JSON: %v", err))
+		return false
+	}
+
+	return p.validateStructure(rawData)
+}
+
+// ValidateString validates a XARF report from a JSON string
+func (p *Parser) ValidateString(jsonStr string) bool {
+	return p.Validate([]byte(jsonStr))
+}
+
+// GetErrors returns validation errors from the last parse/validate call
+func (p *Parser) GetErrors() []string {
+	result := make([]string, len(p.errors))
+	copy(result, p.errors)
+	return result
+}
