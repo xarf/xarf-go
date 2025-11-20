@@ -10,7 +10,7 @@ import (
 
 func main() {
 	fmt.Println("XARF Go Library - Basic Usage Examples")
-	fmt.Println("========================================\n")
+	fmt.Println("========================================")
 
 	// Example 1: Generate a Connection Report (DDoS)
 	fmt.Println("Example 1: Generating a DDoS Connection Report")
