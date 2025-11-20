@@ -198,7 +198,7 @@ func TestGenerateReportAllCategories(t *testing.T) {
 	gen := NewGenerator()
 
 	categories := []struct {
-		category Category
+		category   Category
 		reportType string
 	}{
 		{CategoryAbuse, "ddos"},

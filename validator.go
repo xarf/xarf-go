@@ -5,7 +5,6 @@ import (
 	"net"
 	"net/url"
 	"regexp"
-	"strings"
 )
 
 // Validator provides comprehensive validation for XARF reports
@@ -142,10 +141,10 @@ func (v *Validator) validateMessagingReport(r *MessagingReport) bool {
 
 	// Messaging-specific validation
 	validTypes := map[string]bool{
-		"spam":                true,
-		"phishing":            true,
-		"social_engineering":  true,
-		"bulk_messaging":      true,
+		"spam":               true,
+		"phishing":           true,
+		"social_engineering": true,
+		"bulk_messaging":     true,
 	}
 
 	if !validTypes[r.Type] {
@@ -188,19 +187,19 @@ func (v *Validator) validateConnectionReport(r *ConnectionReport) bool {
 
 	// Valid connection types
 	validTypes := map[string]bool{
-		"ddos":           true,
-		"port_scan":      true,
-		"login_attack":   true,
-		"ip_spoofing":    true,
-		"compromised":    true,
-		"botnet":         true,
+		"ddos":              true,
+		"port_scan":         true,
+		"login_attack":      true,
+		"ip_spoofing":       true,
+		"compromised":       true,
+		"botnet":            true,
 		"malicious_traffic": true,
-		"sql_injection":  true,
-		"reconnaissance": true,
-		"scraping":       true,
-		"vuln_scanning":  true,
-		"bot":            true,
-		"infected_host":  true,
+		"sql_injection":     true,
+		"reconnaissance":    true,
+		"scraping":          true,
+		"vuln_scanning":     true,
+		"bot":               true,
+		"infected_host":     true,
 	}
 
 	if !validTypes[r.Type] {
@@ -226,23 +225,23 @@ func (v *Validator) validateContentReport(r *ContentReport) bool {
 
 	// Valid content types
 	validTypes := map[string]bool{
-		"phishing_site":        true,
-		"malware_distribution": true,
-		"defacement":           true,
-		"spamvertised":         true,
-		"web_hack":             true,
-		"illegal":              true,
-		"malicious":            true,
-		"policy_violation":     true,
-		"phishing":             true,
-		"malware":              true,
-		"fraud":                true,
-		"exposed_data":         true,
-		"csam":                 true,
-		"csem":                 true,
-		"brand_infringement":   true,
+		"phishing_site":           true,
+		"malware_distribution":    true,
+		"defacement":              true,
+		"spamvertised":            true,
+		"web_hack":                true,
+		"illegal":                 true,
+		"malicious":               true,
+		"policy_violation":        true,
+		"phishing":                true,
+		"malware":                 true,
+		"fraud":                   true,
+		"exposed_data":            true,
+		"csam":                    true,
+		"csem":                    true,
+		"brand_infringement":      true,
 		"suspicious_registration": true,
-		"remote_compromise":    true,
+		"remote_compromise":       true,
 	}
 
 	if !validTypes[r.Type] {
@@ -345,8 +344,8 @@ func (v *Validator) validateReputationReport(r *ReputationReport) bool {
 	valid := v.validateBaseReport(&r.Report)
 
 	validTypes := map[string]bool{
-		"blocklist":            true,
-		"threat_intelligence":  true,
+		"blocklist":           true,
+		"threat_intelligence": true,
 	}
 
 	if !validTypes[r.Type] {

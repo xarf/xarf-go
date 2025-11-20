@@ -47,17 +47,17 @@ const (
 type EvidenceSource string
 
 const (
-	EvidenceSourceSpamtrap             EvidenceSource = "spamtrap"
-	EvidenceSourceHoneypot             EvidenceSource = "honeypot"
-	EvidenceSourceUserReport           EvidenceSource = "user_report"
-	EvidenceSourceAutomatedScan        EvidenceSource = "automated_scan"
-	EvidenceSourceManualAnalysis       EvidenceSource = "manual_analysis"
-	EvidenceSourceVulnerabilityScan    EvidenceSource = "vulnerability_scan"
-	EvidenceSourceResearcherAnalysis   EvidenceSource = "researcher_analysis"
-	EvidenceSourceThreatIntelligence   EvidenceSource = "threat_intelligence"
-	EvidenceSourceFlowAnalysis         EvidenceSource = "flow_analysis"
-	EvidenceSourceIDSIPS               EvidenceSource = "ids_ips"
-	EvidenceSourceSIEM                 EvidenceSource = "siem"
+	EvidenceSourceSpamtrap           EvidenceSource = "spamtrap"
+	EvidenceSourceHoneypot           EvidenceSource = "honeypot"
+	EvidenceSourceUserReport         EvidenceSource = "user_report"
+	EvidenceSourceAutomatedScan      EvidenceSource = "automated_scan"
+	EvidenceSourceManualAnalysis     EvidenceSource = "manual_analysis"
+	EvidenceSourceVulnerabilityScan  EvidenceSource = "vulnerability_scan"
+	EvidenceSourceResearcherAnalysis EvidenceSource = "researcher_analysis"
+	EvidenceSourceThreatIntelligence EvidenceSource = "threat_intelligence"
+	EvidenceSourceFlowAnalysis       EvidenceSource = "flow_analysis"
+	EvidenceSourceIDSIPS             EvidenceSource = "ids_ips"
+	EvidenceSourceSIEM               EvidenceSource = "siem"
 )
 
 // Severity represents the severity level of the incident
@@ -72,10 +72,10 @@ const (
 
 // Reporter contains information about who is reporting the abuse
 type Reporter struct {
-	Org         string        `json:"org,omitempty"`
-	Contact     string        `json:"contact"`
-	Type        ReporterType  `json:"type"`
-	OnBehalfOf  *OnBehalfOf   `json:"on_behalf_of,omitempty"`
+	Org        string       `json:"org,omitempty"`
+	Contact    string       `json:"contact"`
+	Type       ReporterType `json:"type"`
+	OnBehalfOf *OnBehalfOf  `json:"on_behalf_of,omitempty"`
 }
 
 // OnBehalfOf represents an entity on whose behalf the report is being made
@@ -117,13 +117,13 @@ type Report struct {
 	EvidenceSource   EvidenceSource `json:"evidence_source"`
 
 	// Optional fields
-	Description string      `json:"description,omitempty"`
-	Evidence    []Evidence  `json:"evidence,omitempty"`
-	Severity    Severity    `json:"severity,omitempty"`
-	Confidence  *float64    `json:"confidence,omitempty"`
-	Tags        []string    `json:"tags,omitempty"`
-	Occurrence  *Occurrence `json:"occurrence,omitempty"`
-	Target      *Target     `json:"target,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	Evidence    []Evidence             `json:"evidence,omitempty"`
+	Severity    Severity               `json:"severity,omitempty"`
+	Confidence  *float64               `json:"confidence,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Occurrence  *Occurrence            `json:"occurrence,omitempty"`
+	Target      *Target                `json:"target,omitempty"`
 	Internal    map[string]interface{} `json:"_internal,omitempty"`
 
 	// Category-specific fields stored as map
@@ -156,12 +156,12 @@ type ConnectionReport struct {
 	Protocol      string `json:"protocol"`
 
 	// Optional connection fields
-	DestinationPort  *int     `json:"destination_port,omitempty"`
-	SourcePort       *int     `json:"source_port,omitempty"`
-	AttackType       string   `json:"attack_type,omitempty"`
-	DurationMinutes  *int     `json:"duration_minutes,omitempty"`
-	PacketCount      *int64   `json:"packet_count,omitempty"`
-	ByteCount        *int64   `json:"byte_count,omitempty"`
+	DestinationPort *int   `json:"destination_port,omitempty"`
+	SourcePort      *int   `json:"source_port,omitempty"`
+	AttackType      string `json:"attack_type,omitempty"`
+	DurationMinutes *int   `json:"duration_minutes,omitempty"`
+	PacketCount     *int64 `json:"packet_count,omitempty"`
+	ByteCount       *int64 `json:"byte_count,omitempty"`
 
 	// Login attack specific
 	AttemptCount       *int     `json:"attempt_count,omitempty"`
@@ -197,12 +197,12 @@ type AbusiveReport struct {
 	Report
 
 	// Abuse-specific fields
-	AttackType      string   `json:"attack_type,omitempty"`
-	DestinationIP   string   `json:"destination_ip,omitempty"`
-	DestinationPort *int     `json:"destination_port,omitempty"`
-	Protocol        string   `json:"protocol,omitempty"`
-	PacketCount     *int64   `json:"packet_count,omitempty"`
-	ByteCount       *int64   `json:"byte_count,omitempty"`
+	AttackType      string `json:"attack_type,omitempty"`
+	DestinationIP   string `json:"destination_ip,omitempty"`
+	DestinationPort *int   `json:"destination_port,omitempty"`
+	Protocol        string `json:"protocol,omitempty"`
+	PacketCount     *int64 `json:"packet_count,omitempty"`
+	ByteCount       *int64 `json:"byte_count,omitempty"`
 }
 
 // VulnerabilityReport represents a vulnerability category report
@@ -210,16 +210,16 @@ type VulnerabilityReport struct {
 	Report
 
 	// Vulnerability-specific fields
-	CVE                    string   `json:"cve,omitempty"`
-	CVSS                   *float64 `json:"cvss,omitempty"`
-	AffectedSoftware       string   `json:"affected_software,omitempty"`
-	AffectedVersion        string   `json:"affected_version,omitempty"`
-	VulnerabilityType      string   `json:"vulnerability_type,omitempty"`
-	ExploitAvailable       *bool    `json:"exploit_available,omitempty"`
-	PatchAvailable         *bool    `json:"patch_available,omitempty"`
-	RecommendedAction      string   `json:"recommended_action,omitempty"`
-	Port                   *int     `json:"port,omitempty"`
-	Service                string   `json:"service,omitempty"`
+	CVE               string   `json:"cve,omitempty"`
+	CVSS              *float64 `json:"cvss,omitempty"`
+	AffectedSoftware  string   `json:"affected_software,omitempty"`
+	AffectedVersion   string   `json:"affected_version,omitempty"`
+	VulnerabilityType string   `json:"vulnerability_type,omitempty"`
+	ExploitAvailable  *bool    `json:"exploit_available,omitempty"`
+	PatchAvailable    *bool    `json:"patch_available,omitempty"`
+	RecommendedAction string   `json:"recommended_action,omitempty"`
+	Port              *int     `json:"port,omitempty"`
+	Service           string   `json:"service,omitempty"`
 }
 
 // CopyrightReport represents a copyright category report
@@ -227,13 +227,13 @@ type CopyrightReport struct {
 	Report
 
 	// Copyright-specific fields
-	WorkTitle          string   `json:"work_title,omitempty"`
-	Copyright_holder   string   `json:"copyright_holder,omitempty"`
-	InfringementType   string   `json:"infringement_type,omitempty"`
-	InfringementURL    string   `json:"infringement_url,omitempty"`
-	OriginalWorkURL    string   `json:"original_work_url,omitempty"`
-	FileNames          []string `json:"file_names,omitempty"`
-	FileHashes         []string `json:"file_hashes,omitempty"`
+	WorkTitle        string   `json:"work_title,omitempty"`
+	Copyright_holder string   `json:"copyright_holder,omitempty"`
+	InfringementType string   `json:"infringement_type,omitempty"`
+	InfringementURL  string   `json:"infringement_url,omitempty"`
+	OriginalWorkURL  string   `json:"original_work_url,omitempty"`
+	FileNames        []string `json:"file_names,omitempty"`
+	FileHashes       []string `json:"file_hashes,omitempty"`
 }
 
 // InfrastructureReport represents an infrastructure category report
@@ -255,10 +255,10 @@ type ReputationReport struct {
 	Report
 
 	// Reputation-specific fields
-	BlocklistName   string    `json:"blocklist_name,omitempty"`
-	ListingDate     time.Time `json:"listing_date,omitempty"`
-	ListingReason   string    `json:"listing_reason,omitempty"`
-	ThreatScore     *float64  `json:"threat_score,omitempty"`
-	HistoricalData  string    `json:"historical_data,omitempty"`
-	RecommendedTTL  *int      `json:"recommended_ttl,omitempty"`
+	BlocklistName  string    `json:"blocklist_name,omitempty"`
+	ListingDate    time.Time `json:"listing_date,omitempty"`
+	ListingReason  string    `json:"listing_reason,omitempty"`
+	ThreatScore    *float64  `json:"threat_score,omitempty"`
+	HistoricalData string    `json:"historical_data,omitempty"`
+	RecommendedTTL *int      `json:"recommended_ttl,omitempty"`
 }

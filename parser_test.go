@@ -10,9 +10,9 @@ import (
 
 func TestParseValidMessagingReport(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version":      "4.0.0",
-		"report_id":         "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-		"timestamp":         "2024-01-15T10:30:00Z",
+		"xarf_version": "4.0.0",
+		"report_id":    "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
 			"org":     "Test Org",
 			"contact": "test@example.com",
@@ -244,8 +244,8 @@ func TestValidateInvalid(t *testing.T) {
 
 func TestParseAllCategories(t *testing.T) {
 	categories := []struct {
-		category Category
-		reportType string
+		category    Category
+		reportType  string
 		extraFields map[string]interface{}
 	}{
 		{CategoryAbuse, "ddos", nil},
