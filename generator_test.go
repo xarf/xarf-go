@@ -75,7 +75,7 @@ func TestGenerateReport(t *testing.T) {
 		Description:      "Test DDoS report",
 	}
 
-	report, err := gen.GenerateReport(opts)
+	report, err := gen.GenerateReport(&opts)
 	require.NoError(t, err)
 
 	assert.Equal(t, XARFVersion, report.XARFVersion)
@@ -102,7 +102,7 @@ func TestGenerateReportWithOnBehalfOf(t *testing.T) {
 		},
 	}
 
-	report, err := gen.GenerateReport(opts)
+	report, err := gen.GenerateReport(&opts)
 	require.NoError(t, err)
 
 	require.NotNil(t, report.Reporter.OnBehalfOf)
@@ -124,7 +124,7 @@ func TestGenerateReportWithOptions(t *testing.T) {
 		Tags:             []string{"phishing", "urgent"},
 	}
 
-	report, err := gen.GenerateReport(opts)
+	report, err := gen.GenerateReport(&opts)
 	require.NoError(t, err)
 
 	assert.Equal(t, SeverityHigh, report.Severity)
@@ -159,7 +159,7 @@ func TestGenerateReportMissingRequired(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := gen.GenerateReport(tt.opts)
+			_, err := gen.GenerateReport(&tt.opts)
 			assert.Error(t, err)
 		})
 	}
@@ -177,7 +177,7 @@ func TestGenerateReportInvalidConfidence(t *testing.T) {
 		Confidence:       &confidence,
 	}
 
-	_, err := gen.GenerateReport(opts)
+	_, err := gen.GenerateReport(&opts)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "confidence")
 }
@@ -220,7 +220,7 @@ func TestGenerateReportAllCategories(t *testing.T) {
 				ReporterContact:  "abuse@example.com",
 			}
 
-			report, err := gen.GenerateReport(opts)
+			report, err := gen.GenerateReport(&opts)
 			require.NoError(t, err)
 			assert.Equal(t, tc.category, report.Category)
 			assert.Equal(t, tc.reportType, report.Type)

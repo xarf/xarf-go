@@ -46,7 +46,7 @@ func generateConnectionReport() {
 		Severity:         xarf.SeverityHigh,
 	}
 
-	report, err := gen.GenerateReport(opts)
+	report, err := gen.GenerateReport(&opts)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +105,7 @@ func validateReport() {
 		Confidence:       &conf,
 	}
 
-	report, err := gen.GenerateReport(opts)
+	report, err := gen.GenerateReport(&opts)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -140,7 +140,7 @@ func onBehalfOfReport() {
 		Description: "Spam report submitted on behalf of our customer",
 	}
 
-	report, err := gen.GenerateReport(opts)
+	report, err := gen.GenerateReport(&opts)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -179,7 +179,7 @@ func reportWithEvidence() {
 		Severity:         xarf.SeverityHigh,
 	}
 
-	report, err := gen.GenerateReport(opts)
+	report, err := gen.GenerateReport(&opts)
 	if err != nil {
 		log.Fatal(err)
 	}
