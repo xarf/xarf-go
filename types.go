@@ -228,7 +228,7 @@ type CopyrightReport struct {
 
 	// Copyright-specific fields
 	WorkTitle        string   `json:"work_title,omitempty"`
-	Copyright_holder string   `json:"copyright_holder,omitempty"`
+	CopyrightHolder  string   `json:"copyright_holder,omitempty"`
 	InfringementType string   `json:"infringement_type,omitempty"`
 	InfringementURL  string   `json:"infringement_url,omitempty"`
 	OriginalWorkURL  string   `json:"original_work_url,omitempty"`

@@ -18,27 +18,28 @@ func NewGenerator() *Generator {
 }
 
 // GenerateUUID generates a UUID v4 for report identification
-func (g *Generator) GenerateUUID() string {
-	uuid := make([]byte, 16)
-	if _, err := rand.Read(uuid); err != nil {
+func (g *Generator) GenerateUUID() (uuid string) {
+	uuidBytes := make([]byte, 16)
+	if _, err := rand.Read(uuidBytes); err != nil {
 		return ""
 	}
 
 	// Set version (4) and variant bits
-	uuid[6] = (uuid[6] & 0x0f) | 0x40 // Version 4
-	uuid[8] = (uuid[8] & 0x3f) | 0x80 // Variant is 10
+	uuidBytes[6] = (uuidBytes[6] & 0x0f) | 0x40 // Version 4
+	uuidBytes[8] = (uuidBytes[8] & 0x3f) | 0x80 // Variant is 10
 
 	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
-		uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:16])
+		uuidBytes[0:4], uuidBytes[4:6], uuidBytes[6:8], uuidBytes[8:10], uuidBytes[10:16])
 }
 
 // GenerateTimestamp generates an ISO 8601 formatted timestamp with UTC timezone
-func (g *Generator) GenerateTimestamp() string {
+func (g *Generator) GenerateTimestamp() (timestamp string) {
 	return time.Now().UTC().Format(time.RFC3339)
 }
 
 // GenerateHash generates a cryptographic hash of the provided data
-func (g *Generator) GenerateHash(data []byte, algorithm string) (string, error) {
+func (g *Generator) GenerateHash(data []byte, algorithm string) (
+	hash string, err error) {
 	switch algorithm {
 	case "sha256":
 		hash := sha256.Sum256(data)
@@ -52,7 +53,8 @@ func (g *Generator) GenerateHash(data []byte, algorithm string) (string, error) 
 }
 
 // AddEvidence creates an evidence item with automatic hashing
-func (g *Generator) AddEvidence(contentType, description string, payload []byte, hashAlgorithm string) (*Evidence, error) {
+func (g *Generator) AddEvidence(contentType, description string,
+	payload []byte, hashAlgorithm string) (evidence *Evidence, err error) {
 	if hashAlgorithm == "" {
 		hashAlgorithm = "sha256"
 	}
@@ -90,7 +92,7 @@ type ReportOptions struct {
 }
 
 // GenerateReport generates a complete XARF v4.0.0 report
-func (g *Generator) GenerateReport(opts ReportOptions) (*Report, error) {
+func (g *Generator) GenerateReport(opts *ReportOptions) (report *Report, err error) {
 	// Validate required fields
 	if opts.SourceIdentifier == "" {
 		return nil, NewGeneratorError("source_identifier is required", nil)
@@ -120,7 +122,7 @@ func (g *Generator) GenerateReport(opts ReportOptions) (*Report, error) {
 	}
 
 	// Build report
-	report := &Report{
+	report = &Report{
 		XARFVersion:      XARFVersion,
 		ReportID:         g.GenerateUUID(),
 		Timestamp:        time.Now().UTC(),
@@ -147,7 +149,8 @@ func (g *Generator) GenerateReport(opts ReportOptions) (*Report, error) {
 }
 
 // GenerateRandomEvidence generates random sample evidence for testing
-func (g *Generator) GenerateRandomEvidence(category Category, description string) (*Evidence, error) {
+func (g *Generator) GenerateRandomEvidence(category Category,
+	description string) (evidence *Evidence, err error) {
 	// Generate random payload data
 	randomData := make([]byte, 32)
 	if _, err := rand.Read(randomData); err != nil {
@@ -165,7 +168,7 @@ func (g *Generator) GenerateRandomEvidence(category Category, description string
 }
 
 // selectContentType selects an appropriate content type for the category
-func (g *Generator) selectContentType(category Category) string {
+func (g *Generator) selectContentType(category Category) (contentType string) {
 	contentTypes := map[Category][]string{
 		CategoryAbuse:          {"application/pcap", "text/plain", "image/png"},
 		CategoryVulnerability:  {"text/plain", "application/json", "image/png"},
@@ -186,7 +189,7 @@ func (g *Generator) selectContentType(category Category) string {
 }
 
 // isValidCategory checks if a category is valid
-func (g *Generator) isValidCategory(category Category) bool {
+func (g *Generator) isValidCategory(category Category) (valid bool) {
 	for _, c := range AllCategories() {
 		if c == category {
 			return true

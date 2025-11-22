@@ -20,7 +20,8 @@ func NewValidator() *Validator {
 }
 
 // ValidateReport validates a complete XARF report
-func (v *Validator) ValidateReport(report interface{}) (bool, []string) {
+func (v *Validator) ValidateReport(report interface{}) (
+	valid bool, errors []string) {
 	v.errors = v.errors[:0]
 
 	switch r := report.(type) {
@@ -49,7 +50,7 @@ func (v *Validator) ValidateReport(report interface{}) (bool, []string) {
 }
 
 // validateBaseReport validates the base report fields
-func (v *Validator) validateBaseReport(r *Report) bool {
+func (v *Validator) validateBaseReport(r *Report) (isValid bool) {
 	valid := true
 
 	// Validate version
@@ -104,7 +105,7 @@ func (v *Validator) validateBaseReport(r *Report) bool {
 }
 
 // validateReporter validates reporter information
-func (v *Validator) validateReporter(r *Reporter) bool {
+func (v *Validator) validateReporter(r *Reporter) (isValid bool) {
 	valid := true
 
 	if r.Contact == "" {
@@ -136,7 +137,7 @@ func (v *Validator) validateReporter(r *Reporter) bool {
 }
 
 // validateMessagingReport validates messaging category reports
-func (v *Validator) validateMessagingReport(r *MessagingReport) bool {
+func (v *Validator) validateMessagingReport(r *MessagingReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	// Messaging-specific validation
@@ -168,7 +169,7 @@ func (v *Validator) validateMessagingReport(r *MessagingReport) bool {
 }
 
 // validateConnectionReport validates connection category reports
-func (v *Validator) validateConnectionReport(r *ConnectionReport) bool {
+func (v *Validator) validateConnectionReport(r *ConnectionReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	// Required fields
@@ -211,7 +212,7 @@ func (v *Validator) validateConnectionReport(r *ConnectionReport) bool {
 }
 
 // validateContentReport validates content category reports
-func (v *Validator) validateContentReport(r *ContentReport) bool {
+func (v *Validator) validateContentReport(r *ContentReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	// URL required
@@ -253,7 +254,7 @@ func (v *Validator) validateContentReport(r *ContentReport) bool {
 }
 
 // validateAbusiveReport validates abuse category reports
-func (v *Validator) validateAbusiveReport(r *AbusiveReport) bool {
+func (v *Validator) validateAbusiveReport(r *AbusiveReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	validTypes := map[string]bool{
@@ -273,7 +274,7 @@ func (v *Validator) validateAbusiveReport(r *AbusiveReport) bool {
 }
 
 // validateVulnerabilityReport validates vulnerability category reports
-func (v *Validator) validateVulnerabilityReport(r *VulnerabilityReport) bool {
+func (v *Validator) validateVulnerabilityReport(r *VulnerabilityReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	validTypes := map[string]bool{
@@ -299,7 +300,7 @@ func (v *Validator) validateVulnerabilityReport(r *VulnerabilityReport) bool {
 }
 
 // validateCopyrightReport validates copyright category reports
-func (v *Validator) validateCopyrightReport(r *CopyrightReport) bool {
+func (v *Validator) validateCopyrightReport(r *CopyrightReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	validTypes := map[string]bool{
@@ -323,7 +324,7 @@ func (v *Validator) validateCopyrightReport(r *CopyrightReport) bool {
 }
 
 // validateInfrastructureReport validates infrastructure category reports
-func (v *Validator) validateInfrastructureReport(r *InfrastructureReport) bool {
+func (v *Validator) validateInfrastructureReport(r *InfrastructureReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	validTypes := map[string]bool{
@@ -340,7 +341,7 @@ func (v *Validator) validateInfrastructureReport(r *InfrastructureReport) bool {
 }
 
 // validateReputationReport validates reputation category reports
-func (v *Validator) validateReputationReport(r *ReputationReport) bool {
+func (v *Validator) validateReputationReport(r *ReputationReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	validTypes := map[string]bool{
@@ -366,7 +367,7 @@ func (v *Validator) validateReputationReport(r *ReputationReport) bool {
 
 // Helper validation functions
 
-func (v *Validator) isValidCategory(category Category) bool {
+func (v *Validator) isValidCategory(category Category) (valid bool) {
 	for _, c := range AllCategories() {
 		if c == category {
 			return true
@@ -375,7 +376,7 @@ func (v *Validator) isValidCategory(category Category) bool {
 	return false
 }
 
-func (v *Validator) isValidEvidenceSource(source EvidenceSource) bool {
+func (v *Validator) isValidEvidenceSource(source EvidenceSource) (valid bool) {
 	validSources := []EvidenceSource{
 		EvidenceSourceSpamtrap,
 		EvidenceSourceHoneypot,
@@ -398,30 +399,31 @@ func (v *Validator) isValidEvidenceSource(source EvidenceSource) bool {
 	return false
 }
 
-func (v *Validator) isValidSeverity(severity Severity) bool {
+func (v *Validator) isValidSeverity(severity Severity) (valid bool) {
 	return severity == SeverityLow ||
 		severity == SeverityMedium ||
 		severity == SeverityHigh ||
 		severity == SeverityCritical
 }
 
-func (v *Validator) isValidReporterType(t ReporterType) bool {
+func (v *Validator) isValidReporterType(t ReporterType) (valid bool) {
 	return t == ReporterTypeAutomated ||
 		t == ReporterTypeManual ||
 		t == ReporterTypeHybrid
 }
 
-func (v *Validator) isValidEmail(email string) bool {
-	// Simple email validation
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+func (v *Validator) isValidEmail(email string) (valid bool) {
+	// Simple email validation - RFC 5322 compliant pattern
+	pattern := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
+	emailRegex := regexp.MustCompile(pattern)
 	return emailRegex.MatchString(email)
 }
 
-func (v *Validator) isValidIP(ip string) bool {
+func (v *Validator) isValidIP(ip string) (valid bool) {
 	return net.ParseIP(ip) != nil
 }
 
-func (v *Validator) isValidURL(urlStr string) bool {
+func (v *Validator) isValidURL(urlStr string) (valid bool) {
 	u, err := url.Parse(urlStr)
 	if err != nil {
 		return false
@@ -430,7 +432,7 @@ func (v *Validator) isValidURL(urlStr string) bool {
 }
 
 // GetErrors returns a copy of validation errors
-func (v *Validator) GetErrors() []string {
+func (v *Validator) GetErrors() (errors []string) {
 	result := make([]string, len(v.errors))
 	copy(result, v.errors)
 	return result

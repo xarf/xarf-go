@@ -13,7 +13,7 @@ type Parser struct {
 }
 
 // NewParser creates a new Parser instance
-func NewParser(strict bool) *Parser {
+func NewParser(strict bool) (parser *Parser) {
 	return &Parser{
 		strict: strict,
 		errors: make([]string, 0),
@@ -21,7 +21,7 @@ func NewParser(strict bool) *Parser {
 }
 
 // Parse parses a XARF report from JSON bytes
-func (p *Parser) Parse(data []byte) (interface{}, error) {
+func (p *Parser) Parse(data []byte) (report interface{}, err error) {
 	p.errors = p.errors[:0]
 
 	// First parse into a map to determine category
@@ -47,81 +47,91 @@ func (p *Parser) Parse(data []byte) (interface{}, error) {
 }
 
 // ParseString parses a XARF report from a JSON string
-func (p *Parser) ParseString(jsonStr string) (interface{}, error) {
+func (p *Parser) ParseString(jsonStr string) (report interface{}, err error) {
 	return p.Parse([]byte(jsonStr))
 }
 
-// parseByCategory parses report based on its category
-func (p *Parser) parseByCategory(data []byte, category Category) (interface{}, error) {
-	switch category {
-	case CategoryMessaging:
+// categoryParser defines a function type for parsing category-specific reports
+type categoryParser func([]byte) (interface{}, error)
+
+// categoryParsers maps categories to their parsing functions
+var categoryParsers = map[Category]categoryParser{
+	CategoryMessaging: func(data []byte) (interface{}, error) {
 		var report MessagingReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse messaging report", err)
 		}
 		return &report, nil
-
-	case CategoryConnection:
+	},
+	CategoryConnection: func(data []byte) (interface{}, error) {
 		var report ConnectionReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse connection report", err)
 		}
 		return &report, nil
-
-	case CategoryContent:
+	},
+	CategoryContent: func(data []byte) (interface{}, error) {
 		var report ContentReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse content report", err)
 		}
 		return &report, nil
-
-	case CategoryAbuse:
+	},
+	CategoryAbuse: func(data []byte) (interface{}, error) {
 		var report AbusiveReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse abuse report", err)
 		}
 		return &report, nil
-
-	case CategoryVulnerability:
+	},
+	CategoryVulnerability: func(data []byte) (interface{}, error) {
 		var report VulnerabilityReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse vulnerability report", err)
 		}
 		return &report, nil
-
-	case CategoryCopyright:
+	},
+	CategoryCopyright: func(data []byte) (interface{}, error) {
 		var report CopyrightReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse copyright report", err)
 		}
 		return &report, nil
-
-	case CategoryInfrastructure:
+	},
+	CategoryInfrastructure: func(data []byte) (interface{}, error) {
 		var report InfrastructureReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse infrastructure report", err)
 		}
 		return &report, nil
-
-	case CategoryReputation:
+	},
+	CategoryReputation: func(data []byte) (interface{}, error) {
 		var report ReputationReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse reputation report", err)
 		}
 		return &report, nil
+	},
+}
 
-	default:
-		// Fall back to base report
-		var report Report
-		if err := json.Unmarshal(data, &report); err != nil {
-			return nil, NewParseError("failed to parse report", err)
-		}
-		return &report, nil
+// parseByCategory parses report based on its category (complexity reduced to 4)
+func (p *Parser) parseByCategory(data []byte, category Category) (
+	result interface{}, err error) {
+	parser, exists := categoryParsers[category]
+	if exists {
+		return parser(data)
 	}
+
+	// Fall back to base report
+	var report Report
+	if err := json.Unmarshal(data, &report); err != nil {
+		return nil, NewParseError("failed to parse report", err)
+	}
+	return &report, nil
 }
 
 // validateStructure validates the basic XARF structure
-func (p *Parser) validateStructure(data map[string]interface{}) bool {
+func (p *Parser) validateStructure(data map[string]interface{}) (isValid bool) {
 	requiredFields := []string{
 		"xarf_version",
 		"report_id",
@@ -148,15 +158,15 @@ func (p *Parser) validateStructure(data map[string]interface{}) bool {
 	}
 
 	// Validate reporter structure
-	reporter, ok := data["reporter"].(map[string]interface{})
-	if !ok {
+	reporter, reporterOk := data["reporter"].(map[string]interface{})
+	if !reporterOk {
 		p.errors = append(p.errors, "reporter must be an object")
 		return false
 	}
 
 	reporterRequired := []string{"contact", "type"}
 	for _, field := range reporterRequired {
-		if _, ok := reporter[field]; !ok {
+		if _, fieldExists := reporter[field]; !fieldExists {
 			p.errors = append(p.errors, fmt.Sprintf("missing reporter field: %s", field))
 			return false
 		}
@@ -191,7 +201,7 @@ func (p *Parser) validateStructure(data map[string]interface{}) bool {
 }
 
 // Validate validates a XARF report without fully parsing it
-func (p *Parser) Validate(data []byte) bool {
+func (p *Parser) Validate(data []byte) (isValid bool) {
 	p.errors = p.errors[:0]
 
 	var rawData map[string]interface{}
@@ -204,12 +214,12 @@ func (p *Parser) Validate(data []byte) bool {
 }
 
 // ValidateString validates a XARF report from a JSON string
-func (p *Parser) ValidateString(jsonStr string) bool {
+func (p *Parser) ValidateString(jsonStr string) (isValid bool) {
 	return p.Validate([]byte(jsonStr))
 }
 
 // GetErrors returns validation errors from the last parse/validate call
-func (p *Parser) GetErrors() []string {
+func (p *Parser) GetErrors() (errors []string) {
 	result := make([]string, len(p.errors))
 	copy(result, p.errors)
 	return result
