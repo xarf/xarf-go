@@ -1,10 +1,14 @@
 # XARF Go Library
 
+![XARF Spec](https://img.shields.io/badge/XARF%20Spec-v4.0.0-blue)
 [![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org/dl/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/xarf/xarf-go?status.svg)](https://godoc.org/github.com/xarf/xarf-go)
 
 A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Reporting Format) reports.
+
+**Library Version:** v1.0.0-alpha.1
+**XARF Specification:** v4.0.0
 
 ## Features
 
@@ -305,6 +309,9 @@ Apache License 2.0 - see [LICENSE](LICENSE) file for details.
 - GitHub Issues: [https://github.com/xarf/xarf-go/issues](https://github.com/xarf/xarf-go/issues)
 - XARF Website: [https://xarf.org](https://xarf.org)
 
-## XARF Version
+## Version Information
 
-This library implements **XARF v4.0.0** specification.
+- **Library Version:** v1.0.0-alpha.1
+- **XARF Specification:** v4.0.0
+
+This library implements the **XARF v4.0.0** specification. The library uses independent versioning starting from v1.0.0-alpha.1, which allows the library version to evolve independently of the XARF specification version.

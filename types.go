@@ -5,6 +5,10 @@ import "time"
 // XARFVersion is the current XARF specification version
 const XARFVersion = "4.0.0"
 
+// SpecVersion is the XARF specification version this library supports
+// This is an alias for XARFVersion for clarity in documentation
+const SpecVersion = XARFVersion
+
 // Category represents the XARF report category
 type Category string
 
