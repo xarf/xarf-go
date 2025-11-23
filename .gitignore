@@ -47,5 +47,9 @@ temp/
 .swarm/
 *.db
 
-# Documentation belongs in xarf-website
-docs/
+# Track .claude/ for project configuration, but ignore specific subdirs if needed
+# .claude/ itself should be tracked
+
+# Documentation belongs in xarf-website (but allow .claude/docs/)
+/docs/
+!/.claude/docs/
