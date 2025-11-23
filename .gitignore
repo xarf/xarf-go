@@ -41,3 +41,11 @@ temp/
 
 # Log files
 *.log
+
+# AI Flow coordination (auto-generated)
+.claude-flow/
+.swarm/
+*.db
+
+# Documentation belongs in xarf-website
+docs/
