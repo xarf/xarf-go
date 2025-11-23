@@ -11,8 +11,8 @@ func TestValidateAbusiveReport(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
-		name      string
-		reportType string
+		name        string
+		reportType  string
 		expectValid bool
 	}{
 		{"Valid ddos", "ddos", true},
