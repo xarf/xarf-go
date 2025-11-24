@@ -38,8 +38,8 @@ func (p *Parser) Parse(data []byte) (report interface{}, err error) {
 	}
 
 	// Parse based on category
-	category, ok := rawData["category"].(string)
-	if !ok {
+	category, categoryOk := rawData["category"].(string)
+	if !categoryOk {
 		return nil, NewParseError("category field missing or invalid", nil)
 	}
 
@@ -138,7 +138,6 @@ func (p *Parser) validateStructure(data map[string]interface{}) (isValid bool) {
 		"timestamp",
 		"reporter",
 		"source_identifier",
-		"category",
 		"type",
 		"evidence_source",
 	}
@@ -149,6 +148,12 @@ func (p *Parser) validateStructure(data map[string]interface{}) (isValid bool) {
 			p.errors = append(p.errors, fmt.Sprintf("missing required field: %s", field))
 			return false
 		}
+	}
+
+	// Check for category field
+	if _, ok := data["category"]; !ok {
+		p.errors = append(p.errors, "missing required field: category")
+		return false
 	}
 
 	// Check XARF version

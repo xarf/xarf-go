@@ -1,6 +1,8 @@
 package xarf
 
-import "time"
+import (
+	"time"
+)
 
 // XARFVersion is the current XARF specification version
 const XARFVersion = "4.0.0"
@@ -116,7 +118,10 @@ type Report struct {
 	Timestamp        time.Time      `json:"timestamp"`
 	Reporter         Reporter       `json:"reporter"`
 	SourceIdentifier string         `json:"source_identifier"`
+
+	// Category field - XARF v4 spec requires "category"
 	Category         Category       `json:"category"`
+
 	Type             string         `json:"type"`
 	EvidenceSource   EvidenceSource `json:"evidence_source"`
 
@@ -133,8 +138,6 @@ type Report struct {
 	// Category-specific fields stored as map
 	AdditionalFields map[string]interface{} `json:"-"`
 }
-
-// MessagingReport represents a messaging category report
 type MessagingReport struct {
 	Report
 

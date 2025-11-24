@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **BREAKING**: Removed backwards compatibility for "class" field - only "category" is now accepted
+- Parser strictly requires "category" field as per XARF v4.0.0 specification
+- Updated all tests to use "category" field exclusively
+
 ### Added
 - Initial release of XARF Go library
 - Support for XARF v4.0.0 specification

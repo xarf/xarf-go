@@ -15,6 +15,7 @@ A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Rep
 - **Parse** XARF v4 JSON reports with automatic type detection
 - **Validate** reports against XARF v4 specification
 - **Generate** compliant XARF reports programmatically
+- **Strict Compliance** - Requires "category" field as per XARF v4.0.0 specification
 - **Support** for all 8 XARF categories:
   - Abuse
   - Messaging
@@ -298,6 +299,15 @@ Contributions are welcome! Please ensure:
 ## License
 
 Apache License 2.0 - see [LICENSE](LICENSE) file for details.
+
+## Specification Compliance
+
+This library strictly implements the XARF v4.0.0 specification, requiring the "category" field for all reports. Reports using the deprecated "class" field will fail validation.
+
+**Important:**
+- ✅ Only "category" field is accepted (XARF v4 spec requirement)
+- ✅ Always outputs "category" when generating
+- ❌ "class" field is not supported (breaking change from earlier alpha versions)
 
 ## Related Projects
 
