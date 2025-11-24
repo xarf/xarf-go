@@ -34,10 +34,16 @@ func TestValidateAbusiveReport(t *testing.T) {
 					Category:         CategoryAbuse,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceAutomatedScan,
-					Reporter: Reporter{
-						Contact: "abuse@example.com",
-						Type:    ReporterTypeAutomated,
-					},
+					Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "abuse@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 				},
 			}
 
@@ -78,10 +84,16 @@ func TestValidateCopyrightReport(t *testing.T) {
 					Category:         CategoryCopyright,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceUserReport,
-					Reporter: Reporter{
-						Contact: "copyright@example.com",
-						Type:    ReporterTypeManual,
-					},
+					Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "copyright@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 				},
 			}
 
@@ -115,10 +127,16 @@ func TestValidateInfrastructureReport(t *testing.T) {
 					Category:         CategoryInfrastructure,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceThreatIntelligence,
-					Reporter: Reporter{
-						Contact: "security@example.com",
-						Type:    ReporterTypeAutomated,
-					},
+					Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "security@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 				},
 			}
 
@@ -152,10 +170,16 @@ func TestValidateReputationReport(t *testing.T) {
 					Category:         CategoryReputation,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceThreatIntelligence,
-					Reporter: Reporter{
-						Contact: "intel@example.com",
-						Type:    ReporterTypeAutomated,
-					},
+					Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "intel@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 				},
 			}
 
@@ -192,10 +216,16 @@ func TestValidateReputationReportThreatScore(t *testing.T) {
 					Category:         CategoryReputation,
 					Type:             "blocklist",
 					EvidenceSource:   EvidenceSourceThreatIntelligence,
-					Reporter: Reporter{
-						Contact: "intel@example.com",
-						Type:    ReporterTypeAutomated,
-					},
+					Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "intel@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 				},
 				ThreatScore: tt.threatScore,
 			}
@@ -223,10 +253,16 @@ func TestValidateUnknownReportType(t *testing.T) {
 			Category:         CategoryMessaging,
 			Type:             "spam",
 			EvidenceSource:   EvidenceSourceSpamtrap,
-			Reporter: Reporter{
-				Contact: "test@example.com",
-				Type:    ReporterTypeAutomated,
-			},
+			Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "test@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 		},
 	}
 
@@ -267,10 +303,16 @@ func TestValidateBaseReportSeverity(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		EvidenceSource:   EvidenceSourceSpamtrap,
-		Reporter: Reporter{
-			Contact: "test@example.com",
-			Type:    ReporterTypeAutomated,
-		},
+		Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "test@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 		Severity: Severity("invalid_severity"),
 	}
 

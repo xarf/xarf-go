@@ -15,7 +15,12 @@ func TestParseString(t *testing.T) {
 		"reporter": {
 			"org": "Test Org",
 			"contact": "test@example.com",
-			"type": "automated"
+			"domain": "example.com"
+		},
+		"sender": {
+			"org": "Sender Org",
+			"contact": "sender@example.com",
+			"domain": "example.com"
 		},
 		"source_identifier": "192.0.2.100",
 		"category": "messaging",
@@ -54,8 +59,14 @@ func TestValidateString(t *testing.T) {
 		"report_id": "test-123",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {
+			"org": "Test Org",
 			"contact": "test@example.com",
-			"type": "automated"
+			"domain": "example.com"
+		},
+		"sender": {
+			"org": "Sender Org",
+			"contact": "sender@example.com",
+			"domain": "example.com"
 		},
 		"source_identifier": "192.0.2.100",
 		"category": "messaging",
@@ -87,8 +98,14 @@ func TestParseByCategoryUnknown(t *testing.T) {
 		"report_id": "test-123",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {
+			"org": "Test Org",
 			"contact": "test@example.com",
-			"type": "automated"
+			"domain": "example.com"
+		},
+		"sender": {
+			"org": "Sender Org",
+			"contact": "sender@example.com",
+			"domain": "example.com"
 		},
 		"source_identifier": "192.0.2.100",
 		"category": "unknown_category",

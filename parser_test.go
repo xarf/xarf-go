@@ -16,7 +16,12 @@ func TestParseValidMessagingReport(t *testing.T) {
 		"reporter": map[string]interface{}{
 			"org":     "Test Org",
 			"contact": "test@example.com",
-			"type":    "automated",
+			"domain":  "example.com",
+		},
+		"sender": map[string]interface{}{
+			"org":     "Sender Org",
+			"contact": "sender@example.com",
+			"domain":  "example.com",
 		},
 		"source_identifier": "192.0.2.100",
 		"category":          "messaging",
@@ -51,7 +56,12 @@ func TestParseValidConnectionReport(t *testing.T) {
 		"reporter": map[string]interface{}{
 			"org":     "Security Monitor",
 			"contact": "security@example.com",
-			"type":    "automated",
+			"domain":  "example.com",
+		},
+		"sender": map[string]interface{}{
+			"org":     "Sender Org",
+			"contact": "sender@example.com",
+			"domain":  "example.com",
 		},
 		"source_identifier": "192.0.2.200",
 		"category":          "connection",
@@ -87,7 +97,12 @@ func TestParseValidContentReport(t *testing.T) {
 		"reporter": map[string]interface{}{
 			"org":     "Web Security",
 			"contact": "web@example.com",
-			"type":    "manual",
+			"domain":  "example.com",
+		},
+		"sender": map[string]interface{}{
+			"org":     "Sender Org",
+			"contact": "sender@example.com",
+			"domain":  "example.com",
 		},
 		"source_identifier": "192.0.2.300",
 		"category":          "content",
@@ -111,19 +126,20 @@ func TestParseValidContentReport(t *testing.T) {
 	assert.Equal(t, "http://phishing.example.com", report.URL)
 }
 
-func TestParseWithOnBehalfOf(t *testing.T) {
+func TestParseWithSameOrg(t *testing.T) {
 	reportData := map[string]interface{}{
 		"xarf_version": "4.0.0",
 		"report_id":    "test-123",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
-			"org":     "Service Provider",
-			"contact": "abuse@provider.com",
-			"type":    "automated",
-			"on_behalf_of": map[string]interface{}{
-				"org":     "Customer Organization",
-				"contact": "customer@example.com",
-			},
+			"org":     "Example Org",
+			"contact": "abuse@example.com",
+			"domain":  "example.com",
+		},
+		"sender": map[string]interface{}{
+			"org":     "Example Org",
+			"contact": "sender@example.com",
+			"domain":  "example.com",
 		},
 		"source_identifier": "192.0.2.100",
 		"category":          "messaging",
@@ -140,9 +156,42 @@ func TestParseWithOnBehalfOf(t *testing.T) {
 
 	report, ok := result.(*MessagingReport)
 	require.True(t, ok)
-	require.NotNil(t, report.Reporter.OnBehalfOf)
-	assert.Equal(t, "Customer Organization", report.Reporter.OnBehalfOf.Org)
-	assert.Equal(t, "customer@example.com", report.Reporter.OnBehalfOf.Contact)
+	assert.Equal(t, "Example Org", report.Reporter.Org)
+	assert.Equal(t, "Example Org", report.Sender.Org)
+}
+
+func TestParseWithDifferentOrg(t *testing.T) {
+	reportData := map[string]interface{}{
+		"xarf_version": "4.0.0",
+		"report_id":    "test-123",
+		"timestamp":    "2024-01-15T10:30:00Z",
+		"reporter": map[string]interface{}{
+			"org":     "Service Provider",
+			"contact": "abuse@provider.com",
+			"domain":  "provider.com",
+		},
+		"sender": map[string]interface{}{
+			"org":     "Customer Organization",
+			"contact": "customer@example.com",
+			"domain":  "example.com",
+		},
+		"source_identifier": "192.0.2.100",
+		"category":          "messaging",
+		"type":              "spam",
+		"evidence_source":   "spamtrap",
+	}
+
+	jsonData, err := json.Marshal(reportData)
+	require.NoError(t, err)
+
+	parser := NewParser(false)
+	result, err := parser.Parse(jsonData)
+	require.NoError(t, err)
+
+	report, ok := result.(*MessagingReport)
+	require.True(t, ok)
+	assert.Equal(t, "Service Provider", report.Reporter.Org)
+	assert.Equal(t, "Customer Organization", report.Sender.Org)
 }
 
 func TestParseInvalidJSON(t *testing.T) {
@@ -161,7 +210,7 @@ func TestParseMissingRequiredFields(t *testing.T) {
 	reportData := map[string]interface{}{
 		"xarf_version": "4.0.0",
 		"category":     "messaging",
-		// Missing required fields
+		// Missing required fields (report_id, reporter, sender, etc.)
 	}
 
 	jsonData, err := json.Marshal(reportData)
@@ -182,8 +231,14 @@ func TestParseInvalidVersion(t *testing.T) {
 		"report_id":    "test-123",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
+			"org":     "Test Org",
 			"contact": "test@example.com",
-			"type":    "automated",
+			"domain":  "example.com",
+		},
+		"sender": map[string]interface{}{
+			"org":     "Sender Org",
+			"contact": "sender@example.com",
+			"domain":  "example.com",
 		},
 		"source_identifier": "192.0.2.100",
 		"category":          "messaging",
@@ -209,8 +264,14 @@ func TestValidate(t *testing.T) {
 		"report_id":    "test-123",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
+			"org":     "Test Org",
 			"contact": "test@example.com",
-			"type":    "automated",
+			"domain":  "example.com",
+		},
+		"sender": map[string]interface{}{
+			"org":     "Sender Org",
+			"contact": "sender@example.com",
+			"domain":  "example.com",
 		},
 		"source_identifier": "192.0.2.100",
 		"category":          "messaging",
@@ -265,8 +326,14 @@ func TestParseAllCategories(t *testing.T) {
 				"report_id":    "test-123",
 				"timestamp":    "2024-01-15T10:30:00Z",
 				"reporter": map[string]interface{}{
+					"org":     "Test Org",
 					"contact": "test@example.com",
-					"type":    "automated",
+					"domain":  "example.com",
+				},
+				"sender": map[string]interface{}{
+					"org":     "Sender Org",
+					"contact": "sender@example.com",
+					"domain":  "example.com",
 				},
 				"source_identifier": "192.0.2.100",
 				"category":          string(tc.category),

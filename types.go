@@ -40,15 +40,6 @@ func AllCategories() []Category {
 	}
 }
 
-// ReporterType represents the type of reporter
-type ReporterType string
-
-const (
-	ReporterTypeAutomated ReporterType = "automated"
-	ReporterTypeManual    ReporterType = "manual"
-	ReporterTypeHybrid    ReporterType = "hybrid"
-)
-
 // EvidenceSource represents how evidence was collected
 type EvidenceSource string
 
@@ -76,18 +67,11 @@ const (
 	SeverityCritical Severity = "critical"
 )
 
-// Reporter contains information about who is reporting the abuse
-type Reporter struct {
-	Org        string       `json:"org,omitempty"`
-	Contact    string       `json:"contact"`
-	Type       ReporterType `json:"type"`
-	OnBehalfOf *OnBehalfOf  `json:"on_behalf_of,omitempty"`
-}
-
-// OnBehalfOf represents an entity on whose behalf the report is being made
-type OnBehalfOf struct {
+// ContactInfo represents contact information for reporter or sender
+type ContactInfo struct {
 	Org     string `json:"org"`
-	Contact string `json:"contact,omitempty"`
+	Contact string `json:"contact"`
+	Domain  string `json:"domain"`
 }
 
 // Evidence represents an evidence item
@@ -116,7 +100,8 @@ type Report struct {
 	XARFVersion      string         `json:"xarf_version"`
 	ReportID         string         `json:"report_id"`
 	Timestamp        time.Time      `json:"timestamp"`
-	Reporter         Reporter       `json:"reporter"`
+	Reporter         ContactInfo    `json:"reporter"`
+	Sender           ContactInfo    `json:"sender"`
 	SourceIdentifier string         `json:"source_identifier"`
 
 	// Category field - XARF v4 spec requires "category"

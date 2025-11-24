@@ -72,7 +72,12 @@ func (v *Validator) validateBaseReport(r *Report) (isValid bool) {
 	}
 
 	// Validate reporter
-	if !v.validateReporter(&r.Reporter) {
+	if !v.validateContactInfo(&r.Reporter, "reporter") {
+		valid = false
+	}
+
+	// Validate sender
+	if !v.validateContactInfo(&r.Sender, "sender") {
 		valid = false
 	}
 
@@ -104,33 +109,29 @@ func (v *Validator) validateBaseReport(r *Report) (isValid bool) {
 	return valid
 }
 
-// validateReporter validates reporter information
-func (v *Validator) validateReporter(r *Reporter) (isValid bool) {
+// validateContactInfo validates contact information (reporter or sender)
+func (v *Validator) validateContactInfo(c *ContactInfo, fieldName string) (isValid bool) {
 	valid := true
 
-	if r.Contact == "" {
-		v.errors = append(v.errors, "reporter.contact is required")
-		valid = false
-	} else if !v.isValidEmail(r.Contact) {
-		v.errors = append(v.errors, fmt.Sprintf("invalid reporter.contact email: %s", r.Contact))
+	if c.Org == "" {
+		v.errors = append(v.errors, fmt.Sprintf("%s.org is required", fieldName))
 		valid = false
 	}
 
-	if !v.isValidReporterType(r.Type) {
-		v.errors = append(v.errors, fmt.Sprintf("invalid reporter.type: %s", r.Type))
+	if c.Contact == "" {
+		v.errors = append(v.errors, fmt.Sprintf("%s.contact is required", fieldName))
+		valid = false
+	} else if !v.isValidEmail(c.Contact) {
+		v.errors = append(v.errors, fmt.Sprintf("invalid %s.contact email: %s", fieldName, c.Contact))
 		valid = false
 	}
 
-	// Validate on_behalf_of if present
-	if r.OnBehalfOf != nil {
-		if r.OnBehalfOf.Org == "" {
-			v.errors = append(v.errors, "on_behalf_of.org is required when on_behalf_of is present")
-			valid = false
-		}
-		if r.OnBehalfOf.Contact != "" && !v.isValidEmail(r.OnBehalfOf.Contact) {
-			v.errors = append(v.errors, fmt.Sprintf("invalid on_behalf_of.contact email: %s", r.OnBehalfOf.Contact))
-			valid = false
-		}
+	if c.Domain == "" {
+		v.errors = append(v.errors, fmt.Sprintf("%s.domain is required", fieldName))
+		valid = false
+	} else if !v.isValidDomain(c.Domain) {
+		v.errors = append(v.errors, fmt.Sprintf("invalid %s.domain: %s", fieldName, c.Domain))
+		valid = false
 	}
 
 	return valid
@@ -406,12 +407,6 @@ func (v *Validator) isValidSeverity(severity Severity) (valid bool) {
 		severity == SeverityCritical
 }
 
-func (v *Validator) isValidReporterType(t ReporterType) (valid bool) {
-	return t == ReporterTypeAutomated ||
-		t == ReporterTypeManual ||
-		t == ReporterTypeHybrid
-}
-
 func (v *Validator) isValidEmail(email string) (valid bool) {
 	// Simple email validation - RFC 5322 compliant pattern
 	pattern := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
@@ -429,6 +424,19 @@ func (v *Validator) isValidURL(urlStr string) (valid bool) {
 		return false
 	}
 	return u.Scheme != "" && u.Host != ""
+}
+
+func (v *Validator) isValidDomain(domain string) (valid bool) {
+	// Simple domain validation - check for valid hostname format
+	// Must contain at least one dot and valid characters
+	if domain == "" {
+		return false
+	}
+
+	// Basic pattern: alphanumeric + dots + hyphens
+	pattern := `^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`
+	domainRegex := regexp.MustCompile(pattern)
+	return domainRegex.MatchString(domain)
 }
 
 // GetErrors returns a copy of validation errors

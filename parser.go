@@ -169,7 +169,7 @@ func (p *Parser) validateStructure(data map[string]interface{}) (isValid bool) {
 		return false
 	}
 
-	reporterRequired := []string{"contact", "type"}
+	reporterRequired := []string{"org", "contact", "domain"}
 	for _, field := range reporterRequired {
 		if _, fieldExists := reporter[field]; !fieldExists {
 			p.errors = append(p.errors, fmt.Sprintf("missing reporter field: %s", field))
@@ -177,16 +177,19 @@ func (p *Parser) validateStructure(data map[string]interface{}) (isValid bool) {
 		}
 	}
 
-	// Validate reporter type
-	reporterType, _ := reporter["type"].(string)
-	validTypes := map[string]bool{
-		"automated": true,
-		"manual":    true,
-		"hybrid":    true,
-	}
-	if !validTypes[reporterType] {
-		p.errors = append(p.errors, fmt.Sprintf("invalid reporter type: %s", reporterType))
+	// Validate sender structure
+	sender, senderOk := data["sender"].(map[string]interface{})
+	if !senderOk {
+		p.errors = append(p.errors, "sender must be an object")
 		return false
+	}
+
+	senderRequired := []string{"org", "contact", "domain"}
+	for _, field := range senderRequired {
+		if _, fieldExists := sender[field]; !fieldExists {
+			p.errors = append(p.errors, fmt.Sprintf("missing sender field: %s", field))
+			return false
+		}
 	}
 
 	// Validate timestamp format
