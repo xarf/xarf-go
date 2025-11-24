@@ -26,7 +26,7 @@ A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Rep
   - Vulnerability
   - Reputation
 - **Type-safe** Go structs for all report types
-- **On-behalf-of** reporting support
+- **Third-party reporting** support (separate reporter/sender fields)
 - **Comprehensive** test coverage
 - **Zero dependencies** (except for testing)
 
@@ -152,32 +152,103 @@ func main() {
 }
 ```
 
-### On-Behalf-Of Reporting
+### Third-Party Reporting (Reporter vs Sender)
+
+XARF v4 supports third-party reporting through separate `reporter` and `sender` fields:
+
+- **reporter**: The original entity that detected/reported the abuse
+- **sender**: The entity transmitting the report (may be different)
+
+#### Direct Reporting (Reporter = Sender)
+
+When you're reporting abuse you directly detected:
 
 ```go
 package main
 
 import (
+    "encoding/json"
+    "fmt"
+    "time"
+
     "github.com/xarf/xarf-go"
 )
 
 func main() {
-    gen := xarf.NewGenerator()
-
-    opts := xarf.ReportOptions{
-        Category:         xarf.CategoryMessaging,
-        Type:             "spam",
-        SourceIdentifier: "192.0.2.100",
-        ReporterContact:  "abuse@provider.com",
-        ReporterOrg:      "Internet Service Provider",
-        OnBehalfOf: &xarf.OnBehalfOf{
-            Org:     "Customer Organization",
-            Contact: "customer@example.com",
-        },
+    // Direct reporting: you are both reporter and sender
+    contactInfo := xarf.ContactInfo{
+        Org:     "Example Security Team",
+        Contact: "abuse@example.com",
+        Domain:  "example.com",
     }
 
-    report, err := gen.GenerateReport(opts)
-    // ... handle report
+    report := xarf.MessagingReport{
+        Report: xarf.Report{
+            XARFVersion:      "4.0.0",
+            ReportID:         "550e8400-e29b-41d4-a716-446655440000",
+            Timestamp:        time.Now(),
+            Reporter:         contactInfo, // You detected it
+            Sender:           contactInfo, // You're sending it
+            SourceIdentifier: "192.0.2.100",
+            Category:         xarf.CategoryMessaging,
+            Type:             "spam",
+            EvidenceSource:   xarf.EvidenceSourceSpamtrap,
+        },
+        Protocol: "smtp",
+    }
+
+    jsonData, _ := json.MarshalIndent(report, "", "  ")
+    fmt.Println(string(jsonData))
+}
+```
+
+#### Third-Party Reporting (Reporter ≠ Sender)
+
+When forwarding abuse reports on behalf of others (e.g., ISP forwarding customer reports):
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "time"
+
+    "github.com/xarf/xarf-go"
+)
+
+func main() {
+    // Original reporter (your customer)
+    reporter := xarf.ContactInfo{
+        Org:     "Customer Organization",
+        Contact: "security@customer.com",
+        Domain:  "customer.com",
+    }
+
+    // Sender (you, forwarding on their behalf)
+    sender := xarf.ContactInfo{
+        Org:     "Internet Service Provider",
+        Contact: "abuse@isp.com",
+        Domain:  "isp.com",
+    }
+
+    report := xarf.MessagingReport{
+        Report: xarf.Report{
+            XARFVersion:      "4.0.0",
+            ReportID:         "550e8400-e29b-41d4-a716-446655440001",
+            Timestamp:        time.Now(),
+            Reporter:         reporter, // Customer who detected abuse
+            Sender:           sender,   // ISP forwarding the report
+            SourceIdentifier: "192.0.2.100",
+            Category:         xarf.CategoryMessaging,
+            Type:             "spam",
+            EvidenceSource:   xarf.EvidenceSourceUserReport,
+        },
+        Protocol: "smtp",
+    }
+
+    jsonData, _ := json.MarshalIndent(report, "", "  ")
+    fmt.Println(string(jsonData))
 }
 ```
 
