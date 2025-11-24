@@ -43,18 +43,9 @@ temp/
 *.log
 
 # AI Tool Coordination (auto-generated, do not commit)
+.claude/
 .claude-flow/
 .swarm/
 .aider/
 .cursor/
 .copilot/
-
-# AI Tool Databases
-*.db
-!.claude/**/*.db
-
-# Note: .claude/ directory IS tracked (for documentation)
-
-# Documentation belongs in xarf-website (but allow .claude/docs/)
-/docs/
-!/.claude/docs/
