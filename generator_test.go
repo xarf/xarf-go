@@ -266,7 +266,6 @@ func TestGenerateReportAllCategories(t *testing.T) {
 		category   Category
 		reportType string
 	}{
-		{CategoryAbuse, "ddos"},
 		{CategoryMessaging, "spam"},
 		{CategoryConnection, "ddos"},
 		{CategoryContent, "phishing_site"},

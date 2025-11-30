@@ -180,7 +180,6 @@ func (g *Generator) GenerateRandomEvidence(category Category,
 // selectContentType selects an appropriate content type for the category
 func (g *Generator) selectContentType(category Category) (contentType string) {
 	contentTypes := map[Category][]string{
-		CategoryAbuse:          {"application/pcap", "text/plain", "image/png"},
 		CategoryVulnerability:  {"text/plain", "application/json", "image/png"},
 		CategoryConnection:     {"application/pcap", "text/plain", "application/json"},
 		CategoryContent:        {"image/png", "text/html", "application/pdf"},

@@ -33,8 +33,6 @@ func (v *Validator) ValidateReport(report interface{}) (
 		return v.validateConnectionReport(r), v.GetErrors()
 	case *ContentReport:
 		return v.validateContentReport(r), v.GetErrors()
-	case *AbusiveReport:
-		return v.validateAbusiveReport(r), v.GetErrors()
 	case *VulnerabilityReport:
 		return v.validateVulnerabilityReport(r), v.GetErrors()
 	case *CopyrightReport:
@@ -248,26 +246,6 @@ func (v *Validator) validateContentReport(r *ContentReport) (isValid bool) {
 
 	if !validTypes[r.Type] {
 		v.errors = append(v.errors, fmt.Sprintf("invalid content type: %s", r.Type))
-		valid = false
-	}
-
-	return valid
-}
-
-// validateAbusiveReport validates abuse category reports
-func (v *Validator) validateAbusiveReport(r *AbusiveReport) (isValid bool) {
-	valid := v.validateBaseReport(&r.Report)
-
-	validTypes := map[string]bool{
-		"ddos":     true,
-		"malware":  true,
-		"phishing": true,
-		"spam":     true,
-		"scanner":  true,
-	}
-
-	if !validTypes[r.Type] {
-		v.errors = append(v.errors, fmt.Sprintf("invalid abuse type: %s", r.Type))
 		valid = false
 	}
 

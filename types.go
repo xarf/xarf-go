@@ -16,7 +16,6 @@ type Category string
 
 // All valid XARF categories as per specification
 const (
-	CategoryAbuse          Category = "abuse"
 	CategoryMessaging      Category = "messaging"
 	CategoryConnection     Category = "connection"
 	CategoryContent        Category = "content"
@@ -29,7 +28,6 @@ const (
 // AllCategories returns all valid XARF categories
 func AllCategories() []Category {
 	return []Category{
-		CategoryAbuse,
 		CategoryMessaging,
 		CategoryConnection,
 		CategoryContent,
@@ -182,19 +180,6 @@ type ContentReport struct {
 	DataExposed                []string `json:"data_exposed,omitempty"`
 	DatabaseType               string   `json:"database_type,omitempty"`
 	RecordsPotentiallyAffected *int     `json:"records_potentially_affected,omitempty"`
-}
-
-// AbusiveReport represents an abuse category report
-type AbusiveReport struct {
-	Report
-
-	// Abuse-specific fields
-	AttackType      string `json:"attack_type,omitempty"`
-	DestinationIP   string `json:"destination_ip,omitempty"`
-	DestinationPort *int   `json:"destination_port,omitempty"`
-	Protocol        string `json:"protocol,omitempty"`
-	PacketCount     *int64 `json:"packet_count,omitempty"`
-	ByteCount       *int64 `json:"byte_count,omitempty"`
 }
 
 // VulnerabilityReport represents a vulnerability category report

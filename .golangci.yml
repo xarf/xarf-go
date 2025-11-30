@@ -1,15 +1,19 @@
 run:
   timeout: 5m
   tests: true
+  modules-download-mode: readonly
   skip-dirs:
     - vendor
     - .github
 
 linters-settings:
   govet:
+    enable-all: true
     check-shadowing: true
   gocyclo:
     min-complexity: 15
+  gocognit:
+    min-complexity: 20
   dupl:
     threshold: 100
   goconst:
@@ -28,36 +32,52 @@ linters-settings:
       - opinionated
       - performance
       - style
+  gosec:
+    excludes:
+      - G404 # Weak random number - acceptable for non-crypto use
+  revive:
+    rules:
+      - name: exported
+        disabled: false
 
 linters:
   enable:
-    - bodyclose
-    - copyloopvar
-    - dogsled
-    - dupl
-    - errcheck
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - prealloc
-    - staticcheck
-    - unconvert
-    - unparam
-    - unused
-    - whitespace
+    # Enabled by default
+    - errcheck    # Check for unchecked errors
+    - gosimple    # Simplify code
+    - govet       # Vet examines Go source code
+    - ineffassign # Detect ineffectual assignments
+    - staticcheck # Advanced static analysis
+    - typecheck   # Type checking
+    - unused      # Find unused code
 
-formatters:
-  enable:
-    - gofmt
-    - goimports
+    # Additional quality linters
+    - bodyclose   # Check HTTP body close
+    - copyloopvar # Loop variable copying
+    - dogsled     # Checks for too many blank identifiers
+    - dupl        # Code duplication
+    - gochecknoinits # Check for init functions
+    - gocognit    # Cognitive complexity
+    - goconst     # Find repeated strings that could be constants
+    - gocritic    # Comprehensive linting
+    - gocyclo     # Cyclomatic complexity
+    - gofmt       # Format checking
+    - goimports   # Check imports
+    - goprintffuncname # Printf-like function names
+    - gosec       # Security problems (like bandit for Python)
+    - lll         # Line length
+    - misspell    # Spelling errors
+    - nakedret    # Naked returns
+    - prealloc    # Preallocate slices
+    - revive      # Fast, configurable linter
+    - unconvert   # Unnecessary type conversions
+    - unparam     # Unused function parameters
+    - whitespace  # Whitespace issues
 
 issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
   exclude-rules:
     - path: _test\.go
       linters:
@@ -66,3 +86,4 @@ issues:
         - dupl
         - gosec
         - lll
+        - gocognit

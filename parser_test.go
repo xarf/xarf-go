@@ -309,7 +309,6 @@ func TestParseAllCategories(t *testing.T) {
 		reportType  string
 		extraFields map[string]interface{}
 	}{
-		{CategoryAbuse, "ddos", nil},
 		{CategoryMessaging, "spam", nil},
 		{CategoryConnection, "ddos", map[string]interface{}{"destination_ip": "203.0.113.10", "protocol": "tcp"}},
 		{CategoryContent, "phishing_site", map[string]interface{}{"url": "http://example.com"}},

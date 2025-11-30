@@ -2,141 +2,240 @@
 
 ## Supported Versions
 
+We release security updates for the following versions:
+
 | Version | Supported          |
 | ------- | ------------------ |
-| 4.0.0-alpha.1 | :white_check_mark: |
+| 1.0.x   | :white_check_mark: |
+| < 1.0   | :x:                |
 
 ## Reporting a Vulnerability
 
-We take security vulnerabilities seriously. If you discover a security issue in this project, please report it responsibly.
+We take the security of xarf-go seriously. If you discover a security vulnerability, please follow these steps:
 
-### How to Report
+### 1. Do Not Open a Public Issue
 
-**DO NOT** open a public GitHub issue for security vulnerabilities.
+Please **do not** open a GitHub issue for security vulnerabilities, as this could put users at risk.
 
-Instead, please email security details to: **security@xarf.org**
+### 2. Report Privately
 
-Include the following information in your report:
+Send security vulnerability reports to:
+
+**Email**: security@xarf.org
+
+Please include:
 - Description of the vulnerability
 - Steps to reproduce the issue
 - Potential impact
-- Suggested fix (if available)
+- Any suggested fixes (if applicable)
+- Your contact information for follow-up
 
-### What to Expect
+### 3. Response Timeline
 
-- **Acknowledgment**: We will acknowledge receipt of your vulnerability report within 48 hours
-- **Assessment**: We will assess the severity and impact of the vulnerability
-- **Updates**: We will keep you informed of our progress toward a fix
-- **Disclosure**: Once a fix is available, we will coordinate disclosure timing with you
+- **Initial Response**: Within 48 hours of receiving your report
+- **Status Update**: Within 7 days with preliminary assessment
+- **Fix Timeline**: Critical vulnerabilities will be addressed within 30 days
+
+### 4. Coordinated Disclosure
+
+We follow a coordinated disclosure process:
+
+1. We will acknowledge receipt of your report
+2. We will investigate and validate the vulnerability
+3. We will develop and test a fix
+4. We will release a security update
+5. We will publicly disclose the vulnerability after the fix is released
+
+We kindly ask that you:
+- Allow us reasonable time to address the issue before public disclosure
+- Make a good faith effort to avoid privacy violations and data destruction
+- Do not exploit the vulnerability beyond what is necessary to demonstrate it
+
+### 5. Recognition
+
+We maintain a security acknowledgments page to recognize researchers who responsibly disclose vulnerabilities. If you would like to be acknowledged, please let us know in your report.
 
 ## Security Best Practices
 
-When using the XARF Go parser, follow these security best practices:
+When using xarf-go in your applications:
 
 ### Input Validation
 
-1. **Always validate XARF reports** against the schema before processing
-2. **Sanitize all user-supplied data** before using it in XARF reports
-3. **Set size limits** on incoming reports to prevent memory exhaustion
-4. **Validate email addresses** and other contact information before use
-
-### Safe Parsing
+Always validate XARF reports before processing:
 
 ```go
-// Example: Safe parsing with error handling
-func processXARF(input []byte) error {
-    // Set maximum input size
-    const maxSize = 10 * 1024 * 1024 // 10MB
-    if len(input) > maxSize {
-        return errors.New("input exceeds maximum size")
-    }
+parser := xarf.NewParser(true) // Use strict mode
+report, err := parser.Parse(data)
+if err != nil {
+    // Handle invalid reports
+    return err
+}
 
-    // Parse with error handling
-    report, err := parser.Parse(input)
-    if err != nil {
-        log.Printf("Parsing failed: %v", err)
-        return fmt.Errorf("invalid XARF report: %w", err)
-    }
-
-    // Validate against schema
-    if err := validator.Validate(report); err != nil {
-        return fmt.Errorf("validation failed: %w", err)
-    }
-
-    // Process validated report
-    return processReport(report)
+validator := xarf.NewValidator()
+valid, errors := validator.ValidateReport(report)
+if !valid {
+    // Handle validation errors
+    return fmt.Errorf("invalid report: %v", errors)
 }
 ```
 
-### Data Handling
+### Rate Limiting
 
-1. **Do not log sensitive information** from XARF reports
-2. **Redact PII** when logging or storing reports
-3. **Use secure transport** (HTTPS/TLS) when transmitting reports
-4. **Encrypt sensitive data** at rest
+Implement rate limiting when accepting XARF reports from external sources to prevent abuse:
 
-### Dependency Management
+```go
+// Example using a rate limiter
+limiter := rate.NewLimiter(rate.Limit(100), 10) // 100 requests per second, burst of 10
 
-1. **Regularly update dependencies** to patch known vulnerabilities
-2. **Use `go mod tidy`** and `go mod verify` regularly
-3. **Review security advisories** for dependencies
-4. **Use `govulncheck`** to scan for known vulnerabilities
+func handleReport(data []byte) error {
+    if !limiter.Allow() {
+        return errors.New("rate limit exceeded")
+    }
 
-```bash
-# Install and run govulncheck
-go install golang.org/x/vuln/cmd/govulncheck@latest
-govulncheck ./...
+    // Process report
+    parser := xarf.NewParser(true)
+    report, err := parser.Parse(data)
+    // ...
+}
 ```
 
-### Code Practices
+### Size Limits
 
-1. **Use bounded buffers** when reading input
-2. **Validate all inputs** before processing
-3. **Avoid unsafe package** unless absolutely necessary
-4. **Use context with timeouts** for long-running operations
-5. **Follow principle of least privilege** in code design
+Set reasonable size limits for incoming reports to prevent memory exhaustion:
 
-### Concurrency Safety
+```go
+const maxReportSize = 10 * 1024 * 1024 // 10MB
 
-1. **Protect shared state** with appropriate synchronization
-2. **Avoid race conditions** (use `go test -race`)
-3. **Handle goroutine lifecycle** properly
-4. **Use channels safely** to prevent deadlocks
+func validateReportSize(data []byte) error {
+    if len(data) > maxReportSize {
+        return errors.New("report exceeds maximum size")
+    }
+    return nil
+}
+```
+
+### Evidence Handling
+
+Be cautious when handling evidence payloads, especially when they contain executable content:
+
+```go
+func processEvidence(evidence *xarf.Evidence) error {
+    // Validate content type
+    allowedTypes := map[string]bool{
+        "text/plain":       true,
+        "application/json": true,
+        "image/png":        true,
+        // Add other safe types
+    }
+
+    if !allowedTypes[evidence.ContentType] {
+        return errors.New("unsupported content type")
+    }
+
+    // Verify hash
+    computed := sha256.Sum256([]byte(evidence.Payload))
+    computedHash := hex.EncodeToString(computed[:])
+
+    if computedHash != evidence.Hash {
+        return errors.New("evidence hash mismatch")
+    }
+
+    // Process evidence safely
+    return nil
+}
+```
+
+### Sanitize Outputs
+
+When displaying or logging XARF report data, sanitize outputs to prevent injection attacks:
+
+```go
+import "html/template"
+
+func displayReport(report *xarf.Report) string {
+    // Use HTML escaping for web display
+    return template.HTMLEscapeString(report.Description)
+}
+```
+
+### Dependency Security
+
+Keep dependencies up to date:
+
+```bash
+# Check for security vulnerabilities in dependencies
+go list -json -m all | nancy sleuth
+
+# Update dependencies
+go get -u ./...
+go mod tidy
+```
 
 ## Known Security Considerations
 
-### XARF Report Content
+### 1. JSON Parsing
 
-XARF reports may contain:
-- Email addresses and contact information
-- IP addresses and network data
-- Potentially malicious content samples
-- Sensitive abuse details
+The library uses Go's standard `encoding/json` package, which is generally safe but:
+- Very large JSON documents could cause high memory usage
+- Deeply nested structures could cause stack overflow
+- Always set size limits on incoming data
 
-**Always treat XARF report content as untrusted user input.**
+### 2. Regular Expressions
 
-### Schema Validation
+Validation uses regex for email and domain validation:
+- These patterns are designed to prevent ReDoS (Regular Expression Denial of Service)
+- If you modify validation patterns, ensure they are not vulnerable to ReDoS
 
-While the parser validates structure, additional application-level validation may be required for:
-- Email address format verification
-- IP address range validation
-- URL safety checks
-- Content length restrictions
+### 3. Evidence Payloads
 
-### Memory Safety
+Evidence payloads can contain arbitrary data:
+- Always validate content types before processing
+- Verify hashes to ensure data integrity
+- Never execute or render untrusted evidence without sandboxing
 
-Go provides memory safety, but consider:
-- **Denial of Service**: Limit input sizes to prevent memory exhaustion
-- **Resource limits**: Set timeouts and resource constraints
-- **Goroutine leaks**: Ensure proper cleanup of concurrent operations
+### 4. V3 Compatibility
 
-## Security Updates
+When processing v3 reports:
+- The conversion process creates new report IDs
+- Additional validation is recommended for converted reports
+- Timestamp parsing uses multiple fallback formats - ensure this fits your security requirements
 
-Security updates will be released as soon as possible after a vulnerability is confirmed and fixed. Updates will be announced through:
-- GitHub Security Advisories
-- Release notes
-- Project changelog
+## Cryptographic Functions
 
-## Acknowledgments
+The library provides:
+- SHA-256 hashing (default)
+- SHA-512 hashing
+- UUID v4 generation using crypto/rand
 
-We appreciate the security research community's efforts in responsibly disclosing vulnerabilities. Contributors who report valid security issues will be acknowledged (with their permission) in our security advisories.
+These use Go's standard `crypto` package, which is FIPS 140-2 compliant when built appropriately.
+
+## Compliance
+
+This library is designed to help with abuse reporting workflows and may process:
+- IP addresses
+- Email addresses
+- Domain names
+- Potentially sensitive evidence
+
+Ensure your use of this library complies with:
+- GDPR (if processing EU data)
+- CCPA (if processing California resident data)
+- Other relevant privacy regulations in your jurisdiction
+
+## Updates and Notifications
+
+- Security updates are released as patch versions (e.g., 1.0.1)
+- Critical security fixes may be backported to older supported versions
+- Subscribe to GitHub releases to be notified of security updates
+
+## Contact
+
+For security-related questions or concerns:
+
+- **Security Issues**: security@xarf.org
+- **General Issues**: [GitHub Issues](https://github.com/xarf/xarf-go/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/xarf/xarf-go/discussions)
+
+---
+
+Last Updated: 2025-11-30

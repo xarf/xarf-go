@@ -77,13 +77,6 @@ var categoryParsers = map[Category]categoryParser{
 		}
 		return &report, nil
 	},
-	CategoryAbuse: func(data []byte) (interface{}, error) {
-		var report AbusiveReport
-		if err := json.Unmarshal(data, &report); err != nil {
-			return nil, NewParseError("failed to parse abuse report", err)
-		}
-		return &report, nil
-	},
 	CategoryVulnerability: func(data []byte) (interface{}, error) {
 		var report VulnerabilityReport
 		if err := json.Unmarshal(data, &report); err != nil {

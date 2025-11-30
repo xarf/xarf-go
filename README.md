@@ -7,7 +7,7 @@
 
 A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Reporting Format) reports.
 
-**Library Version:** v1.0.0-alpha.1
+**Library Version:** v1.0.0
 **XARF Specification:** v4.0.0
 
 ## Features
@@ -16,8 +16,7 @@ A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Rep
 - **Validate** reports against XARF v4 specification
 - **Generate** compliant XARF reports programmatically
 - **Strict Compliance** - Requires "category" field as per XARF v4.0.0 specification
-- **Support** for all 8 XARF categories:
-  - Abuse
+- **Support** for all 7 XARF categories:
   - Messaging
   - Connection
   - Content
@@ -116,6 +115,48 @@ func main() {
 
     jsonData, _ := json.MarshalIndent(report, "", "  ")
     fmt.Println(string(jsonData))
+}
+```
+
+## XARF v3 Backwards Compatibility
+
+This library automatically handles legacy XARF v3 reports with transparent conversion to v4 format.
+
+### Automatic Detection and Conversion
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "github.com/xarf/xarf-go"
+)
+
+func main() {
+    // V3 format report
+    v3Data := []byte(`{
+        "Version": "3.0.0",
+        "ReporterInfo": {
+            "ReporterOrg": "Security Team",
+            "ReporterOrgEmail": "abuse@example.com"
+        },
+        "Report": {
+            "ReportClass": "Messaging",
+            "ReportType": "spam",
+            "SourceIP": "192.0.2.100"
+        }
+    }`)
+
+    // Parser automatically detects and converts v3
+    parser := xarf.NewParser(false)
+    report, err := parser.Parse(v3Data)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Now in v4 format
+    fmt.Printf("Category: %s\n", report.GetCategory())
 }
 ```
 
@@ -254,28 +295,25 @@ func main() {
 
 ## Supported Categories
 
-### 1. Abuse
-General abuse reports (DDoS, malware, phishing, spam, scanner)
-
-### 2. Messaging
+### 1. Messaging
 Email and messaging abuse (spam, phishing, social engineering, bulk messaging)
 
-### 3. Connection
+### 2. Connection
 Network connection abuse (DDoS, port scans, login attacks, SQL injection, etc.)
 
-### 4. Content
+### 3. Content
 Web content abuse (phishing sites, malware distribution, defacement, web hacks)
 
-### 5. Copyright
+### 4. Copyright
 Copyright infringement (DMCA, trademark, P2P, cyberlocker, etc.)
 
-### 6. Infrastructure
+### 5. Infrastructure
 Infrastructure compromise (botnets, compromised servers)
 
-### 7. Vulnerability
+### 6. Vulnerability
 Security vulnerabilities (CVE, misconfigurations, open services)
 
-### 8. Reputation
+### 7. Reputation
 Reputation and threat intelligence (blocklists, threat feeds)
 
 ## Development
@@ -346,7 +384,6 @@ Full API documentation is available at [pkg.go.dev](https://pkg.go.dev/github.co
 - `MessagingReport` - Messaging category report
 - `ConnectionReport` - Connection category report
 - `ContentReport` - Content category report
-- `AbusiveReport` - Abuse category report
 - `VulnerabilityReport` - Vulnerability category report
 - `CopyrightReport` - Copyright category report
 - `InfrastructureReport` - Infrastructure category report
@@ -392,7 +429,7 @@ This library strictly implements the XARF v4.0.0 specification, requiring the "c
 
 ## Version Information
 
-- **Library Version:** v1.0.0-alpha.1
+- **Library Version:** v1.0.0
 - **XARF Specification:** v4.0.0
 
-This library implements the **XARF v4.0.0** specification. The library uses independent versioning starting from v1.0.0-alpha.1, which allows the library version to evolve independently of the XARF specification version.
+This library implements the **XARF v4.0.0** specification. The library uses independent versioning starting from v1.0.0, which allows the library version to evolve independently of the XARF specification version.

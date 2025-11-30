@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateAbusiveReport(t *testing.T) {
+func TestValidateConnectionReportTypes(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -16,35 +16,37 @@ func TestValidateAbusiveReport(t *testing.T) {
 		expectValid bool
 	}{
 		{"Valid ddos", "ddos", true},
-		{"Valid malware", "malware", true},
-		{"Valid phishing", "phishing", true},
-		{"Valid spam", "spam", true},
-		{"Valid scanner", "scanner", true},
+		{"Valid port_scan", "port_scan", true},
+		{"Valid login_attack", "login_attack", true},
+		{"Valid botnet", "botnet", true},
+		{"Valid sql_injection", "sql_injection", true},
 		{"Invalid type", "invalid_type", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			report := &AbusiveReport{
+			report := &ConnectionReport{
 				Report: Report{
 					XARFVersion:      XARFVersion,
 					ReportID:         "test-123",
 					Timestamp:        time.Now(),
 					SourceIdentifier: "192.0.2.100",
-					Category:         CategoryAbuse,
+					Category:         CategoryConnection,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceAutomatedScan,
 					Reporter: ContactInfo{
-					Org:     "Test Org",
-					Contact: "abuse@example.com",
-					Domain:  "example.com",
+						Org:     "Test Org",
+						Contact: "abuse@example.com",
+						Domain:  "example.com",
+					},
+					Sender: ContactInfo{
+						Org:     "Sender Org",
+						Contact: "sender@example.com",
+						Domain:  "example.com",
+					},
 				},
-				Sender: ContactInfo{
-					Org:     "Sender Org",
-					Contact: "sender@example.com",
-					Domain:  "example.com",
-				},
-				},
+				DestinationIP: "203.0.113.10",
+				Protocol:      "tcp",
 			}
 
 			valid, _ := validator.ValidateReport(report)
