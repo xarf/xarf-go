@@ -149,7 +149,12 @@ func TestCategoryField(t *testing.T) {
 				"reporter": {
 					"org": "Test Org",
 					"contact": "test@example.com",
-					"type": "automated"
+					"domain": "example.com"
+				},
+				"sender": {
+					"org": "Sender Org",
+					"contact": "sender@example.com",
+					"domain": "example.com"
 				},
 				"source_identifier": "192.0.2.1",
 				"category": "messaging",
@@ -168,7 +173,12 @@ func TestCategoryField(t *testing.T) {
 				"reporter": {
 					"org": "Test Org",
 					"contact": "test@example.com",
-					"type": "automated"
+					"domain": "example.com"
+				},
+				"sender": {
+					"org": "Sender Org",
+					"contact": "sender@example.com",
+					"domain": "example.com"
 				},
 				"source_identifier": "192.0.2.1",
 				"class": "connection",
