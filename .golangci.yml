@@ -1,15 +1,44 @@
+# golangci-lint v1.64+ configuration
 run:
   timeout: 5m
-  tests: true
-  skip-dirs:
-    - vendor
-    - .github
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - bodyclose
+    - dogsled
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - gosec
+    - misspell
+    - nakedret
+    - prealloc
+    - unconvert
+    - unparam
+    - whitespace
+  disable:
+    - revive  # Disable exported comment requirements
 
 linters-settings:
   govet:
-    check-shadowing: true
+    enable-all: true
+    disable:
+      - fieldalignment  # Disable field alignment analyzer
   gocyclo:
     min-complexity: 15
+  gocognit:
+    min-complexity: 20
   dupl:
     threshold: 100
   goconst:
@@ -28,36 +57,18 @@ linters-settings:
       - opinionated
       - performance
       - style
-
-linters:
-  enable:
-    - bodyclose
-    - copyloopvar
-    - dogsled
-    - dupl
-    - errcheck
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - govet
-    - ineffassign
-    - lll
-    - misspell
-    - nakedret
-    - prealloc
-    - staticcheck
-    - unconvert
-    - unparam
-    - unused
-    - whitespace
-
-formatters:
-  enable:
-    - gofmt
-    - goimports
+  gosec:
+    excludes:
+      - G404
+  revive:
+    rules:
+      - name: exported
+        disabled: false
 
 issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
   exclude-rules:
     - path: _test\.go
       linters:
@@ -66,3 +77,5 @@ issues:
         - dupl
         - gosec
         - lll
+        - gocognit
+        - govet  # Disable field alignment and unused write checks in tests

@@ -70,9 +70,17 @@ func TestGenerateReport(t *testing.T) {
 		Category:         CategoryConnection,
 		Type:             "ddos",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
-		ReporterOrg:      "Example Security",
-		Description:      "Test DDoS report",
+		Reporter: ContactInfo{
+			Org:     "Example Security",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
+		},
+		Description: "Test DDoS report",
 	}
 
 	report, err := gen.GenerateReport(&opts)
@@ -85,29 +93,33 @@ func TestGenerateReport(t *testing.T) {
 	assert.Equal(t, "192.0.2.100", report.SourceIdentifier)
 	assert.Equal(t, "abuse@example.com", report.Reporter.Contact)
 	assert.Equal(t, "Example Security", report.Reporter.Org)
+	assert.Equal(t, "example.com", report.Reporter.Domain)
 }
 
-func TestGenerateReportWithOnBehalfOf(t *testing.T) {
+func TestGenerateReportWithDifferentOrgs(t *testing.T) {
 	gen := NewGenerator()
 
 	opts := ReportOptions{
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@provider.com",
-		ReporterOrg:      "Service Provider",
-		OnBehalfOf: &OnBehalfOf{
+		Reporter: ContactInfo{
+			Org:     "Service Provider",
+			Contact: "abuse@provider.com",
+			Domain:  "provider.com",
+		},
+		Sender: ContactInfo{
 			Org:     "Customer Organization",
 			Contact: "customer@example.com",
+			Domain:  "example.com",
 		},
 	}
 
 	report, err := gen.GenerateReport(&opts)
 	require.NoError(t, err)
 
-	require.NotNil(t, report.Reporter.OnBehalfOf)
-	assert.Equal(t, "Customer Organization", report.Reporter.OnBehalfOf.Org)
-	assert.Equal(t, "customer@example.com", report.Reporter.OnBehalfOf.Contact)
+	assert.Equal(t, "Service Provider", report.Reporter.Org)
+	assert.Equal(t, "Customer Organization", report.Sender.Org)
 }
 
 func TestGenerateReportWithOptions(t *testing.T) {
@@ -118,10 +130,19 @@ func TestGenerateReportWithOptions(t *testing.T) {
 		Category:         CategoryContent,
 		Type:             "phishing_site",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
-		Severity:         SeverityHigh,
-		Confidence:       &confidence,
-		Tags:             []string{"phishing", "urgent"},
+		Reporter: ContactInfo{
+			Org:     "Example Org",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
+		},
+		Severity:   SeverityHigh,
+		Confidence: &confidence,
+		Tags:       []string{"phishing", "urgent"},
 	}
 
 	report, err := gen.GenerateReport(&opts)
@@ -142,17 +163,52 @@ func TestGenerateReportMissingRequired(t *testing.T) {
 		{
 			"Missing source_identifier",
 			ReportOptions{
-				Category:        CategoryMessaging,
-				Type:            "spam",
-				ReporterContact: "abuse@example.com",
+				Category: CategoryMessaging,
+				Type:     "spam",
+				Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "abuse@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 			},
 		},
 		{
-			"Missing reporter_contact",
+			"Missing reporter.contact",
 			ReportOptions{
 				Category:         CategoryMessaging,
 				Type:             "spam",
 				SourceIdentifier: "192.0.2.100",
+				Reporter: ContactInfo{
+					Org:    "Test Org",
+					Domain: "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
+			},
+		},
+		{
+			"Missing sender.org",
+			ReportOptions{
+				Category:         CategoryMessaging,
+				Type:             "spam",
+				SourceIdentifier: "192.0.2.100",
+				Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "abuse@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 			},
 		},
 	}
@@ -173,8 +229,17 @@ func TestGenerateReportInvalidConfidence(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
-		Confidence:       &confidence,
+		Reporter: ContactInfo{
+			Org:     "Test Org",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
+		},
+		Confidence: &confidence,
 	}
 
 	_, err := gen.GenerateReport(&opts)
@@ -201,7 +266,6 @@ func TestGenerateReportAllCategories(t *testing.T) {
 		category   Category
 		reportType string
 	}{
-		{CategoryAbuse, "ddos"},
 		{CategoryMessaging, "spam"},
 		{CategoryConnection, "ddos"},
 		{CategoryContent, "phishing_site"},
@@ -217,7 +281,16 @@ func TestGenerateReportAllCategories(t *testing.T) {
 				Category:         tc.category,
 				Type:             tc.reportType,
 				SourceIdentifier: "192.0.2.100",
-				ReporterContact:  "abuse@example.com",
+				Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "abuse@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
 			}
 
 			report, err := gen.GenerateReport(&opts)

@@ -1,55 +1,111 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to the xarf-go library will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2025-11-30
+
+### Added
+- **XARF v3 Backwards Compatibility**: Full support for parsing and converting legacy XARF v3 reports to v4 format
+  - `IsV3Report()` function to detect v3 format reports
+  - `ConvertV3ToV4()` function for transparent v3 to v4 conversion
+  - `ParseV3Report()` convenience function for parsing v3 reports
+  - Automatic field mapping between v3 and v4 schemas
+  - Support for all v3 categories with proper v4 mapping
+- Comprehensive validation for all 7 XARF v4 categories
+- Type-safe structs for all category-specific reports
+- Third-party reporting support with separate reporter/sender fields
+- Evidence source enumeration with 11 standard types
+- Severity levels (low, medium, high, critical)
+- Confidence scoring (0.0-1.0)
+- Occurrence time ranges for incidents
+- Target information (IP, port, URL)
+- Evidence attachments with automatic hashing (SHA256, SHA512)
+- UUID v4 generation for report IDs
+- RFC3339 timestamp generation
+- Comprehensive test coverage
 
 ### Changed
-- **BREAKING**: Removed backwards compatibility for "class" field - only "category" is now accepted
-- Parser strictly requires "category" field as per XARF v4.0.0 specification
-- Updated all tests to use "category" field exclusively
+- **BREAKING**: Removed "abuse" category (not in XARF v4.0.0 specification)
+  - The library now correctly implements only the 7 official categories
+  - Migration path: Use "connection" category for reports previously using "abuse"
+- Updated to production-ready v1.0.0 version
+- Aligned with XARF v4.0.0 specification requirements
+- Improved category validation to match specification exactly
 
-### Added
-- Initial release of XARF Go library
-- Support for XARF v4.0.0 specification
-- Parser for all 8 XARF report categories
-- Validator with comprehensive validation rules
-- Generator for creating compliant XARF reports
-- Support for on-behalf-of reporting
-- Comprehensive test suite with >90% coverage
-- GitHub Actions CI/CD workflows
-- golangci-lint configuration
-- Makefile for build automation
-- Complete API documentation
+### Removed
+- **BREAKING**: `CategoryAbuse` constant (use `CategoryConnection` instead)
+- **BREAKING**: `AbusiveReport` struct type (use `ConnectionReport` instead)
+- **BREAKING**: Abuse category validation and parsing logic
 
-### Categories Supported
-- Abuse
-- Messaging
-- Connection
-- Content
-- Copyright
-- Infrastructure
-- Vulnerability
-- Reputation
+### Fixed
+- Category list now correctly contains only 7 categories as per specification
+- All documentation updated to reflect correct category count
 
-### Features
-- Type-safe Go structs for all report types
-- Automatic category detection during parsing
-- Email, IP, and URL validation
-- Evidence hash generation (SHA-256, SHA-512)
-- UUID v4 report ID generation
-- ISO 8601 timestamp generation
-- Confidence score validation
-- CVSS score validation
-- Comprehensive error types
+### Migration Notes
 
-## [1.0.0] - TBD
+#### From v0.x to v1.0.0
 
-### Added
-- First stable release
+**Removed Abuse Category:**
+If your code uses the "abuse" category, update it to use "connection":
 
-[Unreleased]: https://github.com/xarf/xarf-go/compare/v1.0.0...HEAD
+```go
+// Old (v0.x)
+opts := xarf.ReportOptions{
+    Category: xarf.CategoryAbuse,
+    Type:     "ddos",
+    // ...
+}
+
+// New (v1.0.0)
+opts := xarf.ReportOptions{
+    Category: xarf.CategoryConnection,
+    Type:     "ddos",
+    // ...
+}
+```
+
+**Abuse Report Type:**
+If your code uses `AbusiveReport`, switch to `ConnectionReport`:
+
+```go
+// Old (v0.x)
+var report *xarf.AbusiveReport
+
+// New (v1.0.0)
+var report *xarf.ConnectionReport
+```
+
+#### From XARF v3 to v4
+
+The library automatically handles v3 reports through conversion. No code changes needed for parsing:
+
+```go
+// Works with both v3 and v4 reports
+parser := xarf.NewParser(false)
+report, err := parser.Parse(jsonData) // Automatically detects and converts v3
+```
+
+For explicit v3 conversion:
+
+```go
+if xarf.IsV3Report(data) {
+    v4Data, err := xarf.ConvertV3ToV4(data)
+    // Use v4Data
+}
+```
+
+### Security
+- See [SECURITY.md](SECURITY.md) for security policy and vulnerability reporting
+
+## Version Numbering
+
+This library uses independent semantic versioning starting from v1.0.0:
+- **Library Version**: v1.0.0
+- **XARF Specification**: v4.0.0
+
+The library version evolves independently of the XARF specification version to allow for library-specific improvements and bug fixes.
+
 [1.0.0]: https://github.com/xarf/xarf-go/releases/tag/v1.0.0
