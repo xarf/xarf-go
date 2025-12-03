@@ -16,7 +16,6 @@ type Category string
 
 // All valid XARF categories as per specification
 const (
-	CategoryAbuse          Category = "abuse"
 	CategoryMessaging      Category = "messaging"
 	CategoryConnection     Category = "connection"
 	CategoryContent        Category = "content"
@@ -29,7 +28,6 @@ const (
 // AllCategories returns all valid XARF categories
 func AllCategories() []Category {
 	return []Category{
-		CategoryAbuse,
 		CategoryMessaging,
 		CategoryConnection,
 		CategoryContent,
@@ -39,15 +37,6 @@ func AllCategories() []Category {
 		CategoryReputation,
 	}
 }
-
-// ReporterType represents the type of reporter
-type ReporterType string
-
-const (
-	ReporterTypeAutomated ReporterType = "automated"
-	ReporterTypeManual    ReporterType = "manual"
-	ReporterTypeHybrid    ReporterType = "hybrid"
-)
 
 // EvidenceSource represents how evidence was collected
 type EvidenceSource string
@@ -76,18 +65,11 @@ const (
 	SeverityCritical Severity = "critical"
 )
 
-// Reporter contains information about who is reporting the abuse
-type Reporter struct {
-	Org        string       `json:"org,omitempty"`
-	Contact    string       `json:"contact"`
-	Type       ReporterType `json:"type"`
-	OnBehalfOf *OnBehalfOf  `json:"on_behalf_of,omitempty"`
-}
-
-// OnBehalfOf represents an entity on whose behalf the report is being made
-type OnBehalfOf struct {
+// ContactInfo represents contact information for reporter or sender
+type ContactInfo struct {
 	Org     string `json:"org"`
-	Contact string `json:"contact,omitempty"`
+	Contact string `json:"contact"`
+	Domain  string `json:"domain"`
 }
 
 // Evidence represents an evidence item
@@ -113,17 +95,19 @@ type Target struct {
 
 // Report is the base XARF report structure
 type Report struct {
-	XARFVersion      string         `json:"xarf_version"`
-	ReportID         string         `json:"report_id"`
-	Timestamp        time.Time      `json:"timestamp"`
-	Reporter         Reporter       `json:"reporter"`
-	SourceIdentifier string         `json:"source_identifier"`
+	XARFVersion      string      `json:"xarf_version"`
+	ReportID         string      `json:"report_id"`
+	Timestamp        time.Time   `json:"timestamp"`
+	Reporter         ContactInfo `json:"reporter"`
+	Sender           ContactInfo `json:"sender"`
+	SourceIdentifier string      `json:"source_identifier"`
+	SourcePort       *int        `json:"source_port,omitempty"` // Optional but critical for CGNAT
 
 	// Category field - XARF v4 spec requires "category"
-	Category         Category       `json:"category"`
+	Category Category `json:"category"`
 
-	Type             string         `json:"type"`
-	EvidenceSource   EvidenceSource `json:"evidence_source"`
+	Type           string         `json:"type"`
+	EvidenceSource EvidenceSource `json:"evidence_source"`
 
 	// Optional fields
 	Description string                 `json:"description,omitempty"`
@@ -197,19 +181,6 @@ type ContentReport struct {
 	DataExposed                []string `json:"data_exposed,omitempty"`
 	DatabaseType               string   `json:"database_type,omitempty"`
 	RecordsPotentiallyAffected *int     `json:"records_potentially_affected,omitempty"`
-}
-
-// AbusiveReport represents an abuse category report
-type AbusiveReport struct {
-	Report
-
-	// Abuse-specific fields
-	AttackType      string `json:"attack_type,omitempty"`
-	DestinationIP   string `json:"destination_ip,omitempty"`
-	DestinationPort *int   `json:"destination_port,omitempty"`
-	Protocol        string `json:"protocol,omitempty"`
-	PacketCount     *int64 `json:"packet_count,omitempty"`
-	ByteCount       *int64 `json:"byte_count,omitempty"`
 }
 
 // VulnerabilityReport represents a vulnerability category report

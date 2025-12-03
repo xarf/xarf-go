@@ -7,7 +7,7 @@
 
 A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Reporting Format) reports.
 
-**Library Version:** v1.0.0-alpha.1
+**Library Version:** v1.0.0
 **XARF Specification:** v4.0.0
 
 ## Features
@@ -16,8 +16,7 @@ A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Rep
 - **Validate** reports against XARF v4 specification
 - **Generate** compliant XARF reports programmatically
 - **Strict Compliance** - Requires "category" field as per XARF v4.0.0 specification
-- **Support** for all 8 XARF categories:
-  - Abuse
+- **Support** for all 7 XARF categories:
   - Messaging
   - Connection
   - Content
@@ -26,7 +25,7 @@ A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Rep
   - Vulnerability
   - Reputation
 - **Type-safe** Go structs for all report types
-- **On-behalf-of** reporting support
+- **Third-party reporting** support (separate reporter/sender fields)
 - **Comprehensive** test coverage
 - **Zero dependencies** (except for testing)
 
@@ -119,6 +118,48 @@ func main() {
 }
 ```
 
+## XARF v3 Backwards Compatibility
+
+This library automatically handles legacy XARF v3 reports with transparent conversion to v4 format.
+
+### Automatic Detection and Conversion
+
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "github.com/xarf/xarf-go"
+)
+
+func main() {
+    // V3 format report
+    v3Data := []byte(`{
+        "Version": "3.0.0",
+        "ReporterInfo": {
+            "ReporterOrg": "Security Team",
+            "ReporterOrgEmail": "abuse@example.com"
+        },
+        "Report": {
+            "ReportClass": "Messaging",
+            "ReportType": "spam",
+            "SourceIP": "192.0.2.100"
+        }
+    }`)
+
+    // Parser automatically detects and converts v3
+    parser := xarf.NewParser(false)
+    report, err := parser.Parse(v3Data)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Now in v4 format
+    fmt.Printf("Category: %s\n", report.GetCategory())
+}
+```
+
 ### Validating a Report
 
 ```go
@@ -152,59 +193,127 @@ func main() {
 }
 ```
 
-### On-Behalf-Of Reporting
+### Third-Party Reporting (Reporter vs Sender)
+
+XARF v4 supports third-party reporting through separate `reporter` and `sender` fields:
+
+- **reporter**: The original entity that detected/reported the abuse
+- **sender**: The entity transmitting the report (may be different)
+
+#### Direct Reporting (Reporter = Sender)
+
+When you're reporting abuse you directly detected:
 
 ```go
 package main
 
 import (
+    "encoding/json"
+    "fmt"
+    "time"
+
     "github.com/xarf/xarf-go"
 )
 
 func main() {
-    gen := xarf.NewGenerator()
-
-    opts := xarf.ReportOptions{
-        Category:         xarf.CategoryMessaging,
-        Type:             "spam",
-        SourceIdentifier: "192.0.2.100",
-        ReporterContact:  "abuse@provider.com",
-        ReporterOrg:      "Internet Service Provider",
-        OnBehalfOf: &xarf.OnBehalfOf{
-            Org:     "Customer Organization",
-            Contact: "customer@example.com",
-        },
+    // Direct reporting: you are both reporter and sender
+    contactInfo := xarf.ContactInfo{
+        Org:     "Example Security Team",
+        Contact: "abuse@example.com",
+        Domain:  "example.com",
     }
 
-    report, err := gen.GenerateReport(opts)
-    // ... handle report
+    report := xarf.MessagingReport{
+        Report: xarf.Report{
+            XARFVersion:      "4.0.0",
+            ReportID:         "550e8400-e29b-41d4-a716-446655440000",
+            Timestamp:        time.Now(),
+            Reporter:         contactInfo, // You detected it
+            Sender:           contactInfo, // You're sending it
+            SourceIdentifier: "192.0.2.100",
+            Category:         xarf.CategoryMessaging,
+            Type:             "spam",
+            EvidenceSource:   xarf.EvidenceSourceSpamtrap,
+        },
+        Protocol: "smtp",
+    }
+
+    jsonData, _ := json.MarshalIndent(report, "", "  ")
+    fmt.Println(string(jsonData))
+}
+```
+
+#### Third-Party Reporting (Reporter ≠ Sender)
+
+When forwarding abuse reports on behalf of others (e.g., ISP forwarding customer reports):
+
+```go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "time"
+
+    "github.com/xarf/xarf-go"
+)
+
+func main() {
+    // Original reporter (your customer)
+    reporter := xarf.ContactInfo{
+        Org:     "Customer Organization",
+        Contact: "security@customer.com",
+        Domain:  "customer.com",
+    }
+
+    // Sender (you, forwarding on their behalf)
+    sender := xarf.ContactInfo{
+        Org:     "Internet Service Provider",
+        Contact: "abuse@isp.com",
+        Domain:  "isp.com",
+    }
+
+    report := xarf.MessagingReport{
+        Report: xarf.Report{
+            XARFVersion:      "4.0.0",
+            ReportID:         "550e8400-e29b-41d4-a716-446655440001",
+            Timestamp:        time.Now(),
+            Reporter:         reporter, // Customer who detected abuse
+            Sender:           sender,   // ISP forwarding the report
+            SourceIdentifier: "192.0.2.100",
+            Category:         xarf.CategoryMessaging,
+            Type:             "spam",
+            EvidenceSource:   xarf.EvidenceSourceUserReport,
+        },
+        Protocol: "smtp",
+    }
+
+    jsonData, _ := json.MarshalIndent(report, "", "  ")
+    fmt.Println(string(jsonData))
 }
 ```
 
 ## Supported Categories
 
-### 1. Abuse
-General abuse reports (DDoS, malware, phishing, spam, scanner)
-
-### 2. Messaging
+### 1. Messaging
 Email and messaging abuse (spam, phishing, social engineering, bulk messaging)
 
-### 3. Connection
+### 2. Connection
 Network connection abuse (DDoS, port scans, login attacks, SQL injection, etc.)
 
-### 4. Content
+### 3. Content
 Web content abuse (phishing sites, malware distribution, defacement, web hacks)
 
-### 5. Copyright
+### 4. Copyright
 Copyright infringement (DMCA, trademark, P2P, cyberlocker, etc.)
 
-### 6. Infrastructure
+### 5. Infrastructure
 Infrastructure compromise (botnets, compromised servers)
 
-### 7. Vulnerability
+### 6. Vulnerability
 Security vulnerabilities (CVE, misconfigurations, open services)
 
-### 8. Reputation
+### 7. Reputation
 Reputation and threat intelligence (blocklists, threat feeds)
 
 ## Development
@@ -275,7 +384,6 @@ Full API documentation is available at [pkg.go.dev](https://pkg.go.dev/github.co
 - `MessagingReport` - Messaging category report
 - `ConnectionReport` - Connection category report
 - `ContentReport` - Content category report
-- `AbusiveReport` - Abuse category report
 - `VulnerabilityReport` - Vulnerability category report
 - `CopyrightReport` - Copyright category report
 - `InfrastructureReport` - Infrastructure category report
@@ -321,7 +429,7 @@ This library strictly implements the XARF v4.0.0 specification, requiring the "c
 
 ## Version Information
 
-- **Library Version:** v1.0.0-alpha.1
+- **Library Version:** v1.0.0
 - **XARF Specification:** v4.0.0
 
-This library implements the **XARF v4.0.0** specification. The library uses independent versioning starting from v1.0.0-alpha.1, which allows the library version to evolve independently of the XARF specification version.
+This library implements the **XARF v4.0.0** specification. The library uses independent versioning starting from v1.0.0, which allows the library version to evolve independently of the XARF specification version.
