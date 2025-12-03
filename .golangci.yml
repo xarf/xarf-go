@@ -33,9 +33,8 @@ linters:
 linters-settings:
   govet:
     enable-all: true
-    settings:
-      fieldalignment:
-        suggest-new: false  # Disable field alignment suggestions
+    disable:
+      - fieldalignment  # Disable field alignment analyzer
   gocyclo:
     min-complexity: 15
   gocognit:
