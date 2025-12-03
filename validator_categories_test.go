@@ -16,10 +16,16 @@ func TestValidateConnectionReportTypes(t *testing.T) {
 		expectValid bool
 	}{
 		{"Valid ddos", "ddos", true},
+		{"Valid ddos_amplification", "ddos_amplification", true},
 		{"Valid port_scan", "port_scan", true},
 		{"Valid login_attack", "login_attack", true},
-		{"Valid botnet", "botnet", true},
+		{"Valid auth_failure", "auth_failure", true},
 		{"Valid sql_injection", "sql_injection", true},
+		{"Valid reconnaissance", "reconnaissance", true},
+		{"Valid scraping", "scraping", true},
+		{"Valid vulnerability_scan", "vulnerability_scan", true},
+		{"Valid infected_host", "infected_host", true},
+		{"Invalid botnet", "botnet", false}, // Botnet belongs to INFRASTRUCTURE, not CONNECTION
 		{"Invalid type", "invalid_type", false},
 	}
 
@@ -63,15 +69,15 @@ func TestValidateCopyrightReport(t *testing.T) {
 		reportType  string
 		expectValid bool
 	}{
-		{"Valid infringement", "infringement", true},
-		{"Valid dmca", "dmca", true},
-		{"Valid trademark", "trademark", true},
 		{"Valid p2p", "p2p", true},
 		{"Valid cyberlocker", "cyberlocker", true},
 		{"Valid link_site", "link_site", true},
 		{"Valid ugc_platform", "ugc_platform", true},
 		{"Valid usenet", "usenet", true},
 		{"Valid copyright", "copyright", true},
+		{"Invalid infringement", "infringement", false}, // Not in XARF v4 spec
+		{"Invalid dmca", "dmca", false},                 // Not in XARF v4 spec
+		{"Invalid trademark", "trademark", false},       // Not in XARF v4 spec
 		{"Invalid type", "invalid_type", false},
 	}
 

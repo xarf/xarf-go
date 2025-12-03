@@ -101,6 +101,7 @@ type Report struct {
 	Reporter         ContactInfo `json:"reporter"`
 	Sender           ContactInfo `json:"sender"`
 	SourceIdentifier string      `json:"source_identifier"`
+	SourcePort       *int        `json:"source_port,omitempty"` // Optional but critical for CGNAT
 
 	// Category field - XARF v4 spec requires "category"
 	Category Category `json:"category"`

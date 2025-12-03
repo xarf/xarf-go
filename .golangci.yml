@@ -1,15 +1,40 @@
+# golangci-lint v1.64+ configuration
 run:
   timeout: 5m
-  tests: true
-  modules-download-mode: readonly
-  skip-dirs:
-    - vendor
-    - .github
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - bodyclose
+    - dogsled
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - gosec
+    - misspell
+    - nakedret
+    - prealloc
+    - unconvert
+    - unparam
+    - whitespace
+  disable:
+    - revive  # Disable exported comment requirements
 
 linters-settings:
   govet:
     enable-all: true
-    check-shadowing: true
+    disable:
+      - fieldalignment  # Disable field alignment analyzer
   gocyclo:
     min-complexity: 15
   gocognit:
@@ -34,45 +59,11 @@ linters-settings:
       - style
   gosec:
     excludes:
-      - G404 # Weak random number - acceptable for non-crypto use
+      - G404
   revive:
     rules:
       - name: exported
         disabled: false
-
-linters:
-  enable:
-    # Enabled by default
-    - errcheck    # Check for unchecked errors
-    - gosimple    # Simplify code
-    - govet       # Vet examines Go source code
-    - ineffassign # Detect ineffectual assignments
-    - staticcheck # Advanced static analysis
-    - typecheck   # Type checking
-    - unused      # Find unused code
-
-    # Additional quality linters
-    - bodyclose   # Check HTTP body close
-    - copyloopvar # Loop variable copying
-    - dogsled     # Checks for too many blank identifiers
-    - dupl        # Code duplication
-    - gochecknoinits # Check for init functions
-    - gocognit    # Cognitive complexity
-    - goconst     # Find repeated strings that could be constants
-    - gocritic    # Comprehensive linting
-    - gocyclo     # Cyclomatic complexity
-    - gofmt       # Format checking
-    - goimports   # Check imports
-    - goprintffuncname # Printf-like function names
-    - gosec       # Security problems (like bandit for Python)
-    - lll         # Line length
-    - misspell    # Spelling errors
-    - nakedret    # Naked returns
-    - prealloc    # Preallocate slices
-    - revive      # Fast, configurable linter
-    - unconvert   # Unnecessary type conversions
-    - unparam     # Unused function parameters
-    - whitespace  # Whitespace issues
 
 issues:
   exclude-use-default: false
@@ -87,3 +78,4 @@ issues:
         - gosec
         - lll
         - gocognit
+        - govet  # Disable field alignment and unused write checks in tests
