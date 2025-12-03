@@ -40,13 +40,13 @@ func TestIsV3Report(t *testing.T) {
 			expected: false,
 		},
 		{
-			name: "Invalid JSON",
-			data: `{invalid}`,
+			name:     "Invalid JSON",
+			data:     `{invalid}`,
 			expected: false,
 		},
 		{
-			name: "No version field",
-			data: `{"other": "data"}`,
+			name:     "No version field",
+			data:     `{"other": "data"}`,
 			expected: false,
 		},
 	}
@@ -335,7 +335,7 @@ func TestMapV3EvidenceSource(t *testing.T) {
 		{"user_report", "user_report"},
 		{"automated_scan", "automated_scan"},
 		{"unknown_source", "automated_scan"}, // Default
-		{"", "automated_scan"},                // Default
+		{"", "automated_scan"},               // Default
 	}
 
 	for _, tt := range tests {

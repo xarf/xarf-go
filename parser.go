@@ -8,9 +8,9 @@ import (
 
 // Input size limits for DOS prevention
 const (
-	MaxJSONSize      = 10 * 1024 * 1024  // 10MB max JSON input
-	MaxEvidenceSize  = 5 * 1024 * 1024   // 5MB max per evidence item
-	MaxEvidenceCount = 50                // Max 50 evidence items
+	MaxJSONSize      = 10 * 1024 * 1024 // 10MB max JSON input
+	MaxEvidenceSize  = 5 * 1024 * 1024  // 5MB max per evidence item
+	MaxEvidenceCount = 50               // Max 50 evidence items
 )
 
 // Parser handles parsing and basic validation of XARF reports

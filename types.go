@@ -95,19 +95,19 @@ type Target struct {
 
 // Report is the base XARF report structure
 type Report struct {
-	XARFVersion      string         `json:"xarf_version"`
-	ReportID         string         `json:"report_id"`
-	Timestamp        time.Time      `json:"timestamp"`
-	Reporter         ContactInfo    `json:"reporter"`
-	Sender           ContactInfo    `json:"sender"`
-	SourceIdentifier string         `json:"source_identifier"`
-	SourcePort       *int           `json:"source_port,omitempty"` // Optional but critical for CGNAT
+	XARFVersion      string      `json:"xarf_version"`
+	ReportID         string      `json:"report_id"`
+	Timestamp        time.Time   `json:"timestamp"`
+	Reporter         ContactInfo `json:"reporter"`
+	Sender           ContactInfo `json:"sender"`
+	SourceIdentifier string      `json:"source_identifier"`
+	SourcePort       *int        `json:"source_port,omitempty"` // Optional but critical for CGNAT
 
 	// Category field - XARF v4 spec requires "category"
-	Category         Category       `json:"category"`
+	Category Category `json:"category"`
 
-	Type             string         `json:"type"`
-	EvidenceSource   EvidenceSource `json:"evidence_source"`
+	Type           string         `json:"type"`
+	EvidenceSource EvidenceSource `json:"evidence_source"`
 
 	// Optional fields
 	Description string                 `json:"description,omitempty"`
