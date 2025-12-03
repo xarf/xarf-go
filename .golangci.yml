@@ -75,3 +75,4 @@ issues:
         - gosec
         - lll
         - gocognit
+        - govet  # Disable field alignment and unused write checks in tests

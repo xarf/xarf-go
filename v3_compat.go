@@ -184,7 +184,7 @@ func toSnakeCase(s string) string {
 	}
 
 	// Generic conversion for other fields
-	var result []rune
+	result := make([]rune, 0, len(s)+5) // Pre-allocate with buffer for underscores
 	for i, r := range s {
 		if i > 0 && r >= 'A' && r <= 'Z' {
 			result = append(result, '_')
