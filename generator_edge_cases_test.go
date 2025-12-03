@@ -34,7 +34,6 @@ func TestGenerateRandomEvidenceAllCategories(t *testing.T) {
 		CategoryMessaging,
 		CategoryConnection,
 		CategoryContent,
-		CategoryAbuse,
 		CategoryVulnerability,
 		CategoryCopyright,
 		CategoryInfrastructure,
@@ -62,7 +61,6 @@ func TestSelectContentTypeForEachCategory(t *testing.T) {
 		{CategoryMessaging, "message/rfc822"},
 		{CategoryConnection, "application/pcap"},
 		{CategoryContent, "image/png"},
-		{CategoryAbuse, "application/pcap"},
 		{CategoryVulnerability, "text/plain"},
 		{CategoryCopyright, "text/html"},
 		{CategoryInfrastructure, "application/pcap"},
@@ -88,7 +86,6 @@ func TestIsValidCategoryAllTypes(t *testing.T) {
 		{CategoryMessaging, true},
 		{CategoryConnection, true},
 		{CategoryContent, true},
-		{CategoryAbuse, true},
 		{CategoryVulnerability, true},
 		{CategoryCopyright, true},
 		{CategoryInfrastructure, true},
@@ -110,7 +107,16 @@ func TestGenerateReportInvalidCategory(t *testing.T) {
 		Category:         Category("invalid_category"),
 		Type:             "test",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
+		Reporter: ContactInfo{
+			Org:     "Test Org",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
+		},
 	}
 
 	_, err := gen.GenerateReport(&opts)
@@ -126,28 +132,31 @@ func TestGenerateReportWithAllOptionalFields(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
-		ReporterOrg:      "Test Org",
-		Severity:         SeverityMedium,
-		Confidence:       &confidence,
-		Tags:             []string{"tag1", "tag2", "tag3"},
-		Description:      "Detailed description",
-		OnBehalfOf: &OnBehalfOf{
+		Reporter: ContactInfo{
+			Org:     "Test Org",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
 			Org:     "Client Org",
 			Contact: "client@example.com",
+			Domain:  "example.com",
 		},
+		Severity:    SeverityMedium,
+		Confidence:  &confidence,
+		Tags:        []string{"tag1", "tag2", "tag3"},
+		Description: "Detailed description",
 	}
 
 	report, err := gen.GenerateReport(&opts)
 	require.NoError(t, err)
 
 	assert.Equal(t, "Test Org", report.Reporter.Org)
+	assert.Equal(t, "Client Org", report.Sender.Org)
 	assert.Equal(t, SeverityMedium, report.Severity)
 	assert.Equal(t, 0.85, *report.Confidence)
 	assert.Equal(t, []string{"tag1", "tag2", "tag3"}, report.Tags)
 	assert.Equal(t, "Detailed description", report.Description)
-	assert.NotNil(t, report.Reporter.OnBehalfOf)
-	assert.Equal(t, "Client Org", report.Reporter.OnBehalfOf.Org)
 }
 
 func TestGenerateReportMinimalFields(t *testing.T) {
@@ -157,7 +166,16 @@ func TestGenerateReportMinimalFields(t *testing.T) {
 		Category:         CategoryConnection,
 		Type:             "ddos",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
+		Reporter: ContactInfo{
+			Org:     "Test Org",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
+		},
 	}
 
 	report, err := gen.GenerateReport(&opts)
@@ -169,6 +187,7 @@ func TestGenerateReportMinimalFields(t *testing.T) {
 	assert.Equal(t, CategoryConnection, report.Category)
 	assert.Equal(t, "ddos", report.Type)
 	assert.Equal(t, "abuse@example.com", report.Reporter.Contact)
+	assert.Equal(t, "example.com", report.Reporter.Domain)
 }
 
 func TestGenerateHashDifferentAlgorithms(t *testing.T) {
