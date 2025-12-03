@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestValidateAbusiveReport(t *testing.T) {
+func TestValidateConnectionReportTypes(t *testing.T) {
 	validator := NewValidator()
 
 	tests := []struct {
@@ -16,29 +16,43 @@ func TestValidateAbusiveReport(t *testing.T) {
 		expectValid bool
 	}{
 		{"Valid ddos", "ddos", true},
-		{"Valid malware", "malware", true},
-		{"Valid phishing", "phishing", true},
-		{"Valid spam", "spam", true},
-		{"Valid scanner", "scanner", true},
+		{"Valid ddos_amplification", "ddos_amplification", true},
+		{"Valid port_scan", "port_scan", true},
+		{"Valid login_attack", "login_attack", true},
+		{"Valid auth_failure", "auth_failure", true},
+		{"Valid sql_injection", "sql_injection", true},
+		{"Valid reconnaissance", "reconnaissance", true},
+		{"Valid scraping", "scraping", true},
+		{"Valid vulnerability_scan", "vulnerability_scan", true},
+		{"Valid infected_host", "infected_host", true},
+		{"Invalid botnet", "botnet", false}, // Botnet belongs to INFRASTRUCTURE, not CONNECTION
 		{"Invalid type", "invalid_type", false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			report := &AbusiveReport{
+			report := &ConnectionReport{
 				Report: Report{
 					XARFVersion:      XARFVersion,
 					ReportID:         "test-123",
 					Timestamp:        time.Now(),
 					SourceIdentifier: "192.0.2.100",
-					Category:         CategoryAbuse,
+					Category:         CategoryConnection,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceAutomatedScan,
-					Reporter: Reporter{
+					Reporter: ContactInfo{
+						Org:     "Test Org",
 						Contact: "abuse@example.com",
-						Type:    ReporterTypeAutomated,
+						Domain:  "example.com",
+					},
+					Sender: ContactInfo{
+						Org:     "Sender Org",
+						Contact: "sender@example.com",
+						Domain:  "example.com",
 					},
 				},
+				DestinationIP: "203.0.113.10",
+				Protocol:      "tcp",
 			}
 
 			valid, _ := validator.ValidateReport(report)
@@ -55,15 +69,15 @@ func TestValidateCopyrightReport(t *testing.T) {
 		reportType  string
 		expectValid bool
 	}{
-		{"Valid infringement", "infringement", true},
-		{"Valid dmca", "dmca", true},
-		{"Valid trademark", "trademark", true},
 		{"Valid p2p", "p2p", true},
 		{"Valid cyberlocker", "cyberlocker", true},
 		{"Valid link_site", "link_site", true},
 		{"Valid ugc_platform", "ugc_platform", true},
 		{"Valid usenet", "usenet", true},
 		{"Valid copyright", "copyright", true},
+		{"Invalid infringement", "infringement", false}, // Not in XARF v4 spec
+		{"Invalid dmca", "dmca", false},                 // Not in XARF v4 spec
+		{"Invalid trademark", "trademark", false},       // Not in XARF v4 spec
 		{"Invalid type", "invalid_type", false},
 	}
 
@@ -78,9 +92,15 @@ func TestValidateCopyrightReport(t *testing.T) {
 					Category:         CategoryCopyright,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceUserReport,
-					Reporter: Reporter{
+					Reporter: ContactInfo{
+						Org:     "Test Org",
 						Contact: "copyright@example.com",
-						Type:    ReporterTypeManual,
+						Domain:  "example.com",
+					},
+					Sender: ContactInfo{
+						Org:     "Sender Org",
+						Contact: "sender@example.com",
+						Domain:  "example.com",
 					},
 				},
 			}
@@ -115,9 +135,15 @@ func TestValidateInfrastructureReport(t *testing.T) {
 					Category:         CategoryInfrastructure,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceThreatIntelligence,
-					Reporter: Reporter{
+					Reporter: ContactInfo{
+						Org:     "Test Org",
 						Contact: "security@example.com",
-						Type:    ReporterTypeAutomated,
+						Domain:  "example.com",
+					},
+					Sender: ContactInfo{
+						Org:     "Sender Org",
+						Contact: "sender@example.com",
+						Domain:  "example.com",
 					},
 				},
 			}
@@ -152,9 +178,15 @@ func TestValidateReputationReport(t *testing.T) {
 					Category:         CategoryReputation,
 					Type:             tt.reportType,
 					EvidenceSource:   EvidenceSourceThreatIntelligence,
-					Reporter: Reporter{
+					Reporter: ContactInfo{
+						Org:     "Test Org",
 						Contact: "intel@example.com",
-						Type:    ReporterTypeAutomated,
+						Domain:  "example.com",
+					},
+					Sender: ContactInfo{
+						Org:     "Sender Org",
+						Contact: "sender@example.com",
+						Domain:  "example.com",
 					},
 				},
 			}
@@ -192,9 +224,15 @@ func TestValidateReputationReportThreatScore(t *testing.T) {
 					Category:         CategoryReputation,
 					Type:             "blocklist",
 					EvidenceSource:   EvidenceSourceThreatIntelligence,
-					Reporter: Reporter{
+					Reporter: ContactInfo{
+						Org:     "Test Org",
 						Contact: "intel@example.com",
-						Type:    ReporterTypeAutomated,
+						Domain:  "example.com",
+					},
+					Sender: ContactInfo{
+						Org:     "Sender Org",
+						Contact: "sender@example.com",
+						Domain:  "example.com",
 					},
 				},
 				ThreatScore: tt.threatScore,
@@ -223,9 +261,15 @@ func TestValidateUnknownReportType(t *testing.T) {
 			Category:         CategoryMessaging,
 			Type:             "spam",
 			EvidenceSource:   EvidenceSourceSpamtrap,
-			Reporter: Reporter{
+			Reporter: ContactInfo{
+				Org:     "Test Org",
 				Contact: "test@example.com",
-				Type:    ReporterTypeAutomated,
+				Domain:  "example.com",
+			},
+			Sender: ContactInfo{
+				Org:     "Sender Org",
+				Contact: "sender@example.com",
+				Domain:  "example.com",
 			},
 		},
 	}
@@ -267,9 +311,15 @@ func TestValidateBaseReportSeverity(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		EvidenceSource:   EvidenceSourceSpamtrap,
-		Reporter: Reporter{
+		Reporter: ContactInfo{
+			Org:     "Test Org",
 			Contact: "test@example.com",
-			Type:    ReporterTypeAutomated,
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
 		},
 		Severity: Severity("invalid_severity"),
 	}

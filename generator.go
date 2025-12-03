@@ -77,11 +77,9 @@ type ReportOptions struct {
 	Category         Category
 	Type             string
 	SourceIdentifier string
-	ReporterContact  string
-	ReporterOrg      string
-	ReporterType     ReporterType
+	Reporter         ContactInfo
+	Sender           ContactInfo
 	EvidenceSource   EvidenceSource
-	OnBehalfOf       *OnBehalfOf
 	Description      string
 	Evidence         []Evidence
 	Severity         Severity
@@ -97,8 +95,27 @@ func (g *Generator) GenerateReport(opts *ReportOptions) (report *Report, err err
 	if opts.SourceIdentifier == "" {
 		return nil, NewGeneratorError("source_identifier is required", nil)
 	}
-	if opts.ReporterContact == "" {
-		return nil, NewGeneratorError("reporter_contact is required", nil)
+
+	// Validate reporter fields
+	if opts.Reporter.Org == "" {
+		return nil, NewGeneratorError("reporter.org is required", nil)
+	}
+	if opts.Reporter.Contact == "" {
+		return nil, NewGeneratorError("reporter.contact is required", nil)
+	}
+	if opts.Reporter.Domain == "" {
+		return nil, NewGeneratorError("reporter.domain is required", nil)
+	}
+
+	// Validate sender fields
+	if opts.Sender.Org == "" {
+		return nil, NewGeneratorError("sender.org is required", nil)
+	}
+	if opts.Sender.Contact == "" {
+		return nil, NewGeneratorError("sender.contact is required", nil)
+	}
+	if opts.Sender.Domain == "" {
+		return nil, NewGeneratorError("sender.domain is required", nil)
 	}
 
 	// Validate category
@@ -107,9 +124,6 @@ func (g *Generator) GenerateReport(opts *ReportOptions) (report *Report, err err
 	}
 
 	// Set defaults
-	if opts.ReporterType == "" {
-		opts.ReporterType = ReporterTypeAutomated
-	}
 	if opts.EvidenceSource == "" {
 		opts.EvidenceSource = EvidenceSourceAutomatedScan
 	}
@@ -130,19 +144,15 @@ func (g *Generator) GenerateReport(opts *ReportOptions) (report *Report, err err
 		Category:         opts.Category,
 		Type:             opts.Type,
 		EvidenceSource:   opts.EvidenceSource,
-		Reporter: Reporter{
-			Org:        opts.ReporterOrg,
-			Contact:    opts.ReporterContact,
-			Type:       opts.ReporterType,
-			OnBehalfOf: opts.OnBehalfOf,
-		},
-		Description: opts.Description,
-		Evidence:    opts.Evidence,
-		Severity:    opts.Severity,
-		Confidence:  opts.Confidence,
-		Tags:        opts.Tags,
-		Occurrence:  opts.Occurrence,
-		Target:      opts.Target,
+		Reporter:         opts.Reporter,
+		Sender:           opts.Sender,
+		Description:      opts.Description,
+		Evidence:         opts.Evidence,
+		Severity:         opts.Severity,
+		Confidence:       opts.Confidence,
+		Tags:             opts.Tags,
+		Occurrence:       opts.Occurrence,
+		Target:           opts.Target,
 	}
 
 	return report, nil
@@ -170,7 +180,6 @@ func (g *Generator) GenerateRandomEvidence(category Category,
 // selectContentType selects an appropriate content type for the category
 func (g *Generator) selectContentType(category Category) (contentType string) {
 	contentTypes := map[Category][]string{
-		CategoryAbuse:          {"application/pcap", "text/plain", "image/png"},
 		CategoryVulnerability:  {"text/plain", "application/json", "image/png"},
 		CategoryConnection:     {"application/pcap", "text/plain", "application/json"},
 		CategoryContent:        {"image/png", "text/html", "application/pdf"},

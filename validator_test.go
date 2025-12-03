@@ -18,9 +18,15 @@ func TestValidateBaseReport(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		EvidenceSource:   EvidenceSourceSpamtrap,
-		Reporter: Reporter{
+		Reporter: ContactInfo{
+			Org:     "Test Org",
 			Contact: "test@example.com",
-			Type:    ReporterTypeAutomated,
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
 		},
 	}
 
@@ -40,9 +46,15 @@ func TestValidateInvalidVersion(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		EvidenceSource:   EvidenceSourceSpamtrap,
-		Reporter: Reporter{
+		Reporter: ContactInfo{
+			Org:     "Test Org",
 			Contact: "test@example.com",
-			Type:    ReporterTypeAutomated,
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
 		},
 	}
 
@@ -62,9 +74,15 @@ func TestValidateInvalidEmail(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		EvidenceSource:   EvidenceSourceSpamtrap,
-		Reporter: Reporter{
+		Reporter: ContactInfo{
+			Org:     "Test Org",
 			Contact: "not-an-email",
-			Type:    ReporterTypeAutomated,
+			Domain:  "example.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
 		},
 	}
 
@@ -99,9 +117,15 @@ func TestValidateConfidence(t *testing.T) {
 				Category:         CategoryMessaging,
 				Type:             "spam",
 				EvidenceSource:   EvidenceSourceSpamtrap,
-				Reporter: Reporter{
+				Reporter: ContactInfo{
+					Org:     "Test Org",
 					Contact: "test@example.com",
-					Type:    ReporterTypeAutomated,
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
 				},
 				Confidence: &conf,
 			}
@@ -124,9 +148,15 @@ func TestValidateMessagingReport(t *testing.T) {
 			Category:         CategoryMessaging,
 			Type:             "spam",
 			EvidenceSource:   EvidenceSourceSpamtrap,
-			Reporter: Reporter{
+			Reporter: ContactInfo{
+				Org:     "Test Org",
 				Contact: "test@example.com",
-				Type:    ReporterTypeAutomated,
+				Domain:  "example.com",
+			},
+			Sender: ContactInfo{
+				Org:     "Sender Org",
+				Contact: "sender@example.com",
+				Domain:  "example.com",
 			},
 		},
 		Protocol: "smtp",
@@ -151,9 +181,15 @@ func TestValidateConnectionReport(t *testing.T) {
 			Category:         CategoryConnection,
 			Type:             "ddos",
 			EvidenceSource:   EvidenceSourceHoneypot,
-			Reporter: Reporter{
+			Reporter: ContactInfo{
+				Org:     "Test Org",
 				Contact: "security@example.com",
-				Type:    ReporterTypeAutomated,
+				Domain:  "example.com",
+			},
+			Sender: ContactInfo{
+				Org:     "Sender Org",
+				Contact: "sender@example.com",
+				Domain:  "example.com",
 			},
 		},
 		DestinationIP: "203.0.113.10",
@@ -177,9 +213,15 @@ func TestValidateConnectionReportInvalidIP(t *testing.T) {
 			Category:         CategoryConnection,
 			Type:             "ddos",
 			EvidenceSource:   EvidenceSourceHoneypot,
-			Reporter: Reporter{
+			Reporter: ContactInfo{
+				Org:     "Test Org",
 				Contact: "security@example.com",
-				Type:    ReporterTypeAutomated,
+				Domain:  "example.com",
+			},
+			Sender: ContactInfo{
+				Org:     "Sender Org",
+				Contact: "sender@example.com",
+				Domain:  "example.com",
 			},
 		},
 		DestinationIP: "not-an-ip",
@@ -201,11 +243,17 @@ func TestValidateContentReport(t *testing.T) {
 			Timestamp:        time.Now(),
 			SourceIdentifier: "192.0.2.100",
 			Category:         CategoryContent,
-			Type:             "phishing_site",
+			Type:             "phishing",
 			EvidenceSource:   EvidenceSourceUserReport,
-			Reporter: Reporter{
+			Reporter: ContactInfo{
+				Org:     "Test Org",
 				Contact: "web@example.com",
-				Type:    ReporterTypeManual,
+				Domain:  "example.com",
+			},
+			Sender: ContactInfo{
+				Org:     "Sender Org",
+				Contact: "sender@example.com",
+				Domain:  "example.com",
 			},
 		},
 		URL: "http://phishing.example.com",
@@ -226,11 +274,17 @@ func TestValidateContentReportInvalidURL(t *testing.T) {
 			Timestamp:        time.Now(),
 			SourceIdentifier: "192.0.2.100",
 			Category:         CategoryContent,
-			Type:             "phishing_site",
+			Type:             "phishing",
 			EvidenceSource:   EvidenceSourceUserReport,
-			Reporter: Reporter{
+			Reporter: ContactInfo{
+				Org:     "Test Org",
 				Contact: "web@example.com",
-				Type:    ReporterTypeManual,
+				Domain:  "example.com",
+			},
+			Sender: ContactInfo{
+				Org:     "Sender Org",
+				Contact: "sender@example.com",
+				Domain:  "example.com",
 			},
 		},
 		URL: "not-a-url",
@@ -241,7 +295,7 @@ func TestValidateContentReportInvalidURL(t *testing.T) {
 	assert.Contains(t, errors[0], "url")
 }
 
-func TestValidateOnBehalfOf(t *testing.T) {
+func TestValidateDifferentOrgs(t *testing.T) {
 	validator := NewValidator()
 
 	report := &Report{
@@ -252,13 +306,15 @@ func TestValidateOnBehalfOf(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		EvidenceSource:   EvidenceSourceSpamtrap,
-		Reporter: Reporter{
-			Contact: "test@example.com",
-			Type:    ReporterTypeAutomated,
-			OnBehalfOf: &OnBehalfOf{
-				Org:     "Customer Organization",
-				Contact: "customer@example.com",
-			},
+		Reporter: ContactInfo{
+			Org:     "Service Provider",
+			Contact: "abuse@provider.com",
+			Domain:  "provider.com",
+		},
+		Sender: ContactInfo{
+			Org:     "Customer Organization",
+			Contact: "customer@example.com",
+			Domain:  "example.com",
 		},
 	}
 
@@ -267,7 +323,7 @@ func TestValidateOnBehalfOf(t *testing.T) {
 	assert.Empty(t, errors)
 }
 
-func TestValidateOnBehalfOfMissingOrg(t *testing.T) {
+func TestValidateInvalidDomain(t *testing.T) {
 	validator := NewValidator()
 
 	report := &Report{
@@ -278,18 +334,21 @@ func TestValidateOnBehalfOfMissingOrg(t *testing.T) {
 		Category:         CategoryMessaging,
 		Type:             "spam",
 		EvidenceSource:   EvidenceSourceSpamtrap,
-		Reporter: Reporter{
+		Reporter: ContactInfo{
+			Org:     "Test Org",
 			Contact: "test@example.com",
-			Type:    ReporterTypeAutomated,
-			OnBehalfOf: &OnBehalfOf{
-				Contact: "customer@example.com",
-			},
+			Domain:  "not-a-domain",
+		},
+		Sender: ContactInfo{
+			Org:     "Sender Org",
+			Contact: "sender@example.com",
+			Domain:  "example.com",
 		},
 	}
 
 	valid, errors := validator.ValidateReport(report)
 	assert.False(t, valid)
-	assert.Contains(t, errors[0], "on_behalf_of.org")
+	assert.Contains(t, errors[0], "domain")
 }
 
 func TestValidateVulnerabilityReport(t *testing.T) {
@@ -305,9 +364,15 @@ func TestValidateVulnerabilityReport(t *testing.T) {
 			Category:         CategoryVulnerability,
 			Type:             "cve",
 			EvidenceSource:   EvidenceSourceVulnerabilityScan,
-			Reporter: Reporter{
+			Reporter: ContactInfo{
+				Org:     "Test Org",
 				Contact: "security@example.com",
-				Type:    ReporterTypeAutomated,
+				Domain:  "example.com",
+			},
+			Sender: ContactInfo{
+				Org:     "Sender Org",
+				Contact: "sender@example.com",
+				Domain:  "example.com",
 			},
 		},
 		CVE:  "CVE-2024-1234",

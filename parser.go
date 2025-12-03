@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+// Input size limits for DOS prevention
+const (
+	MaxJSONSize      = 10 * 1024 * 1024 // 10MB max JSON input
+	MaxEvidenceSize  = 5 * 1024 * 1024  // 5MB max per evidence item
+	MaxEvidenceCount = 50               // Max 50 evidence items
+)
+
 // Parser handles parsing and basic validation of XARF reports
 type Parser struct {
 	strict bool
@@ -23,6 +30,11 @@ func NewParser(strict bool) (parser *Parser) {
 // Parse parses a XARF report from JSON bytes
 func (p *Parser) Parse(data []byte) (report interface{}, err error) {
 	p.errors = p.errors[:0]
+
+	// Check input size limit for DOS prevention
+	if len(data) > MaxJSONSize {
+		return nil, NewParseError(fmt.Sprintf("input exceeds maximum size of %d bytes", MaxJSONSize), nil)
+	}
 
 	// First parse into a map to determine category
 	var rawData map[string]interface{}
@@ -48,6 +60,10 @@ func (p *Parser) Parse(data []byte) (report interface{}, err error) {
 
 // ParseString parses a XARF report from a JSON string
 func (p *Parser) ParseString(jsonStr string) (report interface{}, err error) {
+	// Check input size limit before conversion
+	if len(jsonStr) > MaxJSONSize {
+		return nil, NewParseError(fmt.Sprintf("input exceeds maximum size of %d bytes", MaxJSONSize), nil)
+	}
 	return p.Parse([]byte(jsonStr))
 }
 
@@ -74,13 +90,6 @@ var categoryParsers = map[Category]categoryParser{
 		var report ContentReport
 		if err := json.Unmarshal(data, &report); err != nil {
 			return nil, NewParseError("failed to parse content report", err)
-		}
-		return &report, nil
-	},
-	CategoryAbuse: func(data []byte) (interface{}, error) {
-		var report AbusiveReport
-		if err := json.Unmarshal(data, &report); err != nil {
-			return nil, NewParseError("failed to parse abuse report", err)
 		}
 		return &report, nil
 	},
@@ -169,7 +178,7 @@ func (p *Parser) validateStructure(data map[string]interface{}) (isValid bool) {
 		return false
 	}
 
-	reporterRequired := []string{"contact", "type"}
+	reporterRequired := []string{"org", "contact", "domain"}
 	for _, field := range reporterRequired {
 		if _, fieldExists := reporter[field]; !fieldExists {
 			p.errors = append(p.errors, fmt.Sprintf("missing reporter field: %s", field))
@@ -177,16 +186,19 @@ func (p *Parser) validateStructure(data map[string]interface{}) (isValid bool) {
 		}
 	}
 
-	// Validate reporter type
-	reporterType, _ := reporter["type"].(string)
-	validTypes := map[string]bool{
-		"automated": true,
-		"manual":    true,
-		"hybrid":    true,
-	}
-	if !validTypes[reporterType] {
-		p.errors = append(p.errors, fmt.Sprintf("invalid reporter type: %s", reporterType))
+	// Validate sender structure
+	sender, senderOk := data["sender"].(map[string]interface{})
+	if !senderOk {
+		p.errors = append(p.errors, "sender must be an object")
 		return false
+	}
+
+	senderRequired := []string{"org", "contact", "domain"}
+	for _, field := range senderRequired {
+		if _, fieldExists := sender[field]; !fieldExists {
+			p.errors = append(p.errors, fmt.Sprintf("missing sender field: %s", field))
+			return false
+		}
 	}
 
 	// Validate timestamp format

@@ -5,31 +5,26 @@ import (
 	"fmt"
 	"log"
 
-	xarf "github.com/xarf/xarf-go"
+	"github.com/xarf/xarf-go"
 )
 
 func main() {
 	fmt.Println("XARF Go Library - Basic Usage Examples")
-	fmt.Println("========================================")
+	fmt.Println("=======================================")
 
-	// Example 1: Generate a Connection Report (DDoS)
-	fmt.Println("Example 1: Generating a DDoS Connection Report")
+	// Example 1: Generate a simple connection report
 	generateConnectionReport()
 
-	// Example 2: Parse a XARF Report
-	fmt.Println("\nExample 2: Parsing a XARF Report")
+	// Example 2: Parse a XARF report
 	parseReport()
 
-	// Example 3: Validate a Report
-	fmt.Println("\nExample 3: Validating a Report")
+	// Example 3: Validate a report
 	validateReport()
 
-	// Example 4: On-Behalf-Of Reporting
-	fmt.Println("\nExample 4: On-Behalf-Of Reporting")
-	onBehalfOfReport()
+	// Example 4: Report with different orgs (on behalf of)
+	generateOnBehalfOfReport()
 
-	// Example 5: Generate with Evidence
-	fmt.Println("\nExample 5: Generate Report with Evidence")
+	// Example 5: Report with evidence
 	reportWithEvidence()
 }
 
@@ -40,10 +35,18 @@ func generateConnectionReport() {
 		Category:         xarf.CategoryConnection,
 		Type:             "ddos",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
-		ReporterOrg:      "Example Security Team",
-		Description:      "Sustained DDoS attack detected targeting our infrastructure",
-		Severity:         xarf.SeverityHigh,
+		Reporter: xarf.ContactInfo{
+			Org:     "Example Security Team",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: xarf.ContactInfo{
+			Org:     "Example Security Team",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Description: "Sustained DDoS attack detected targeting our infrastructure",
+		Severity:    xarf.SeverityHigh,
 	}
 
 	report, err := gen.GenerateReport(&opts)
@@ -63,7 +66,12 @@ func parseReport() {
 		"reporter": {
 			"org": "Security Operations Center",
 			"contact": "abuse@example.com",
-			"type": "automated"
+			"domain": "example.com"
+		},
+		"sender": {
+			"org": "Security Operations Center",
+			"contact": "abuse@example.com",
+			"domain": "example.com"
 		},
 		"source_identifier": "192.0.2.100",
 		"category": "connection",
@@ -82,7 +90,7 @@ func parseReport() {
 
 	// Type assertion to access category-specific fields
 	if connReport, ok := result.(*xarf.ConnectionReport); ok {
-		fmt.Printf("Parsed DDoS Report:\n")
+		fmt.Printf("\nParsed DDoS Report:\n")
 		fmt.Printf("  Source: %s\n", connReport.SourceIdentifier)
 		fmt.Printf("  Target: %s:%v\n", connReport.DestinationIP, *connReport.DestinationPort)
 		fmt.Printf("  Protocol: %s\n", connReport.Protocol)
@@ -99,10 +107,18 @@ func validateReport() {
 		Category:         xarf.CategoryContent,
 		Type:             "phishing_site",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
-		ReporterOrg:      "Web Security Team",
-		Severity:         xarf.SeverityCritical,
-		Confidence:       &conf,
+		Reporter: xarf.ContactInfo{
+			Org:     "Web Security Team",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: xarf.ContactInfo{
+			Org:     "Web Security Team",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Severity:   xarf.SeverityCritical,
+		Confidence: &conf,
 	}
 
 	report, err := gen.GenerateReport(&opts)
@@ -114,30 +130,36 @@ func validateReport() {
 	validator := xarf.NewValidator()
 	valid, errors := validator.ValidateReport(report)
 
+	fmt.Println("\nValidation Result:")
 	if valid {
-		fmt.Println("Report is valid!")
+		fmt.Println("  Report is valid!")
 	} else {
-		fmt.Println("Validation errors:")
+		fmt.Println("  Validation errors:")
 		for _, err := range errors {
-			fmt.Printf("  - %s\n", err)
+			fmt.Printf("    - %s\n", err)
 		}
 	}
 }
 
-func onBehalfOfReport() {
+func generateOnBehalfOfReport() {
 	gen := xarf.NewGenerator()
 
 	opts := xarf.ReportOptions{
 		Category:         xarf.CategoryMessaging,
 		Type:             "spam",
-		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@provider.com",
-		ReporterOrg:      "Internet Service Provider",
-		OnBehalfOf: &xarf.OnBehalfOf{
-			Org:     "Customer Organization",
-			Contact: "customer@example.com",
+		SourceIdentifier: "192.0.2.250",
+		Reporter: xarf.ContactInfo{
+			Org:     "Service Provider",
+			Contact: "abuse@provider.com",
+			Domain:  "provider.com",
 		},
-		Description: "Spam report submitted on behalf of our customer",
+		Sender: xarf.ContactInfo{
+			Org:     "Customer Organization",
+			Contact: "abuse@customer.com",
+			Domain:  "customer.com",
+		},
+		Description: "Spam report submitted on behalf of client",
+		Severity:    xarf.SeverityMedium,
 	}
 
 	report, err := gen.GenerateReport(&opts)
@@ -145,11 +167,12 @@ func onBehalfOfReport() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Reporter: %s (%s)\n", report.Reporter.Org, report.Reporter.Contact)
-	if report.Reporter.OnBehalfOf != nil {
-		fmt.Printf("On Behalf Of: %s (%s)\n",
-			report.Reporter.OnBehalfOf.Org,
-			report.Reporter.OnBehalfOf.Contact)
+	fmt.Println("\n--- On Behalf Of Report ---")
+	fmt.Printf("Report ID: %s\n", report.ReportID)
+	fmt.Printf("Reporter Org: %s\n", report.Reporter.Org)
+	fmt.Printf("Sender Org: %s\n", report.Sender.Org)
+	if report.Reporter.Org != report.Sender.Org {
+		fmt.Printf("Report is on behalf of: %s\n", report.Sender.Org)
 	}
 }
 
@@ -172,11 +195,19 @@ func reportWithEvidence() {
 		Category:         xarf.CategoryConnection,
 		Type:             "login_attack",
 		SourceIdentifier: "192.0.2.100",
-		ReporterContact:  "abuse@example.com",
-		ReporterOrg:      "Security Team",
-		Evidence:         []xarf.Evidence{*evidence},
-		Description:      "Brute force login attack detected",
-		Severity:         xarf.SeverityHigh,
+		Reporter: xarf.ContactInfo{
+			Org:     "Security Team",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Sender: xarf.ContactInfo{
+			Org:     "Security Team",
+			Contact: "abuse@example.com",
+			Domain:  "example.com",
+		},
+		Evidence:    []xarf.Evidence{*evidence},
+		Description: "Brute force login attack detected",
+		Severity:    xarf.SeverityHigh,
 	}
 
 	report, err := gen.GenerateReport(&opts)
@@ -184,13 +215,11 @@ func reportWithEvidence() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Report with Evidence:\n")
-	fmt.Printf("  Report ID: %s\n", report.ReportID)
-	fmt.Printf("  Evidence Items: %d\n", len(report.Evidence))
+	fmt.Println("\n--- Report with Evidence ---")
+	fmt.Printf("Report ID: %s\n", report.ReportID)
+	fmt.Printf("Evidence Items: %d\n", len(report.Evidence))
 	if len(report.Evidence) > 0 {
-		fmt.Printf("  First Evidence:\n")
-		fmt.Printf("    Type: %s\n", report.Evidence[0].ContentType)
-		fmt.Printf("    Description: %s\n", report.Evidence[0].Description)
-		fmt.Printf("    Hash: %s\n", report.Evidence[0].Hash[:16]+"...")
+		fmt.Printf("  Content Type: %s\n", report.Evidence[0].ContentType)
+		fmt.Printf("  Hash: %s\n", report.Evidence[0].Hash)
 	}
 }
