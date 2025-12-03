@@ -243,7 +243,7 @@ func TestValidateContentReport(t *testing.T) {
 			Timestamp:        time.Now(),
 			SourceIdentifier: "192.0.2.100",
 			Category:         CategoryContent,
-			Type:             "phishing_site",
+			Type:             "phishing",
 			EvidenceSource:   EvidenceSourceUserReport,
 			Reporter: ContactInfo{
 				Org:     "Test Org",
@@ -274,7 +274,7 @@ func TestValidateContentReportInvalidURL(t *testing.T) {
 			Timestamp:        time.Now(),
 			SourceIdentifier: "192.0.2.100",
 			Category:         CategoryContent,
-			Type:             "phishing_site",
+			Type:             "phishing",
 			EvidenceSource:   EvidenceSourceUserReport,
 			Reporter: ContactInfo{
 				Org:     "Test Org",

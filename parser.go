@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+// Input size limits for DOS prevention
+const (
+	MaxJSONSize      = 10 * 1024 * 1024  // 10MB max JSON input
+	MaxEvidenceSize  = 5 * 1024 * 1024   // 5MB max per evidence item
+	MaxEvidenceCount = 50                // Max 50 evidence items
+)
+
 // Parser handles parsing and basic validation of XARF reports
 type Parser struct {
 	strict bool
@@ -23,6 +30,11 @@ func NewParser(strict bool) (parser *Parser) {
 // Parse parses a XARF report from JSON bytes
 func (p *Parser) Parse(data []byte) (report interface{}, err error) {
 	p.errors = p.errors[:0]
+
+	// Check input size limit for DOS prevention
+	if len(data) > MaxJSONSize {
+		return nil, NewParseError(fmt.Sprintf("input exceeds maximum size of %d bytes", MaxJSONSize), nil)
+	}
 
 	// First parse into a map to determine category
 	var rawData map[string]interface{}
@@ -48,6 +60,10 @@ func (p *Parser) Parse(data []byte) (report interface{}, err error) {
 
 // ParseString parses a XARF report from a JSON string
 func (p *Parser) ParseString(jsonStr string) (report interface{}, err error) {
+	// Check input size limit before conversion
+	if len(jsonStr) > MaxJSONSize {
+		return nil, NewParseError(fmt.Sprintf("input exceeds maximum size of %d bytes", MaxJSONSize), nil)
+	}
 	return p.Parse([]byte(jsonStr))
 }
 
