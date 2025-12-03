@@ -7,6 +7,12 @@ import (
 	"regexp"
 )
 
+// Pre-compiled regexes for validation (significant performance improvement)
+var (
+	emailRegex  = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+	domainRegex = regexp.MustCompile(`^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`)
+)
+
 // Validator provides comprehensive validation for XARF reports
 type Validator struct {
 	errors []string
@@ -91,6 +97,11 @@ func (v *Validator) validateBaseReport(r *Report) (isValid bool) {
 		valid = false
 	}
 
+	// Validate evidence constraints
+	if !v.validateEvidenceConstraints(r.Evidence) {
+		valid = false
+	}
+
 	// Validate optional fields
 	if r.Confidence != nil {
 		if *r.Confidence < 0.0 || *r.Confidence > 1.0 {
@@ -141,10 +152,8 @@ func (v *Validator) validateMessagingReport(r *MessagingReport) (isValid bool) {
 
 	// Messaging-specific validation
 	validTypes := map[string]bool{
-		"spam":               true,
-		"phishing":           true,
-		"social_engineering": true,
-		"bulk_messaging":     true,
+		"spam":           true,
+		"bulk_messaging": true,
 	}
 
 	if !validTypes[r.Type] {
@@ -187,19 +196,16 @@ func (v *Validator) validateConnectionReport(r *ConnectionReport) (isValid bool)
 
 	// Valid connection types
 	validTypes := map[string]bool{
-		"ddos":              true,
-		"port_scan":         true,
-		"login_attack":      true,
-		"ip_spoofing":       true,
-		"compromised":       true,
-		"botnet":            true,
-		"malicious_traffic": true,
-		"sql_injection":     true,
-		"reconnaissance":    true,
-		"scraping":          true,
-		"vuln_scanning":     true,
-		"bot":               true,
-		"infected_host":     true,
+		"ddos":               true,
+		"ddos_amplification": true,
+		"port_scan":          true,
+		"login_attack":       true,
+		"auth_failure":       true,
+		"sql_injection":      true,
+		"reconnaissance":     true,
+		"scraping":           true,
+		"vulnerability_scan": true,
+		"infected_host":      true,
 	}
 
 	if !validTypes[r.Type] {
@@ -225,14 +231,6 @@ func (v *Validator) validateContentReport(r *ContentReport) (isValid bool) {
 
 	// Valid content types
 	validTypes := map[string]bool{
-		"phishing_site":           true,
-		"malware_distribution":    true,
-		"defacement":              true,
-		"spamvertised":            true,
-		"web_hack":                true,
-		"illegal":                 true,
-		"malicious":               true,
-		"policy_violation":        true,
 		"phishing":                true,
 		"malware":                 true,
 		"fraud":                   true,
@@ -283,15 +281,12 @@ func (v *Validator) validateCopyrightReport(r *CopyrightReport) (isValid bool) {
 	valid := v.validateBaseReport(&r.Report)
 
 	validTypes := map[string]bool{
-		"infringement": true,
-		"dmca":         true,
-		"trademark":    true,
+		"copyright":    true,
 		"p2p":          true,
 		"cyberlocker":  true,
-		"link_site":    true,
 		"ugc_platform": true,
+		"link_site":    true,
 		"usenet":       true,
-		"copyright":    true,
 	}
 
 	if !validTypes[r.Type] {
@@ -344,6 +339,35 @@ func (v *Validator) validateReputationReport(r *ReputationReport) (isValid bool)
 	return valid
 }
 
+// validateEvidenceConstraints validates evidence count and size constraints
+func (v *Validator) validateEvidenceConstraints(evidence []Evidence) (isValid bool) {
+	valid := true
+
+	// Check evidence count limit
+	if len(evidence) > MaxEvidenceCount {
+		v.errors = append(v.errors, fmt.Sprintf("evidence count exceeds maximum of %d items", MaxEvidenceCount))
+		valid = false
+	}
+
+	// Check each evidence item size
+	for i, ev := range evidence {
+		// Check payload size (in bytes)
+		payloadSize := len(ev.Payload)
+		if payloadSize > MaxEvidenceSize {
+			v.errors = append(v.errors, fmt.Sprintf("evidence item %d payload exceeds maximum size of %d bytes (actual: %d)", i, MaxEvidenceSize, payloadSize))
+			valid = false
+		}
+
+		// Validate content type is not empty
+		if ev.ContentType == "" {
+			v.errors = append(v.errors, fmt.Sprintf("evidence item %d must have a content_type", i))
+			valid = false
+		}
+	}
+
+	return valid
+}
+
 // Helper validation functions
 
 func (v *Validator) isValidCategory(category Category) (valid bool) {
@@ -386,9 +410,7 @@ func (v *Validator) isValidSeverity(severity Severity) (valid bool) {
 }
 
 func (v *Validator) isValidEmail(email string) (valid bool) {
-	// Simple email validation - RFC 5322 compliant pattern
-	pattern := `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`
-	emailRegex := regexp.MustCompile(pattern)
+	// Uses pre-compiled regex at package level for performance
 	return emailRegex.MatchString(email)
 }
 
@@ -411,9 +433,7 @@ func (v *Validator) isValidDomain(domain string) (valid bool) {
 		return false
 	}
 
-	// Basic pattern: alphanumeric + dots + hyphens
-	pattern := `^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$`
-	domainRegex := regexp.MustCompile(pattern)
+	// Uses pre-compiled regex at package level for performance
 	return domainRegex.MatchString(domain)
 }
 
