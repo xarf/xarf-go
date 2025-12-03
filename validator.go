@@ -196,16 +196,16 @@ func (v *Validator) validateConnectionReport(r *ConnectionReport) (isValid bool)
 
 	// Valid connection types
 	validTypes := map[string]bool{
-		"ddos":                true,
-		"ddos_amplification":  true,
-		"port_scan":           true,
-		"login_attack":        true,
-		"auth_failure":        true,
-		"sql_injection":       true,
-		"reconnaissance":      true,
-		"scraping":            true,
-		"vulnerability_scan":  true,
-		"infected_host":       true,
+		"ddos":               true,
+		"ddos_amplification": true,
+		"port_scan":          true,
+		"login_attack":       true,
+		"auth_failure":       true,
+		"sql_injection":      true,
+		"reconnaissance":     true,
+		"scraping":           true,
+		"vulnerability_scan": true,
+		"infected_host":      true,
 	}
 
 	if !validTypes[r.Type] {
