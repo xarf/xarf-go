@@ -2,7 +2,10 @@ module github.com/xarf/xarf-go
 
 go 1.21
 
-require github.com/stretchr/testify v1.11.1
+require (
+	github.com/santhosh-tekuri/jsonschema/v5 v5.3.1
+	github.com/stretchr/testify v1.11.1
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

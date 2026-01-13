@@ -91,8 +91,8 @@ func (v *Validator) validateBaseReport(r *Report) (isValid bool) {
 		valid = false
 	}
 
-	// Validate evidence source
-	if !v.isValidEvidenceSource(r.EvidenceSource) {
+	// Validate evidence source (optional field - only validate if provided)
+	if r.EvidenceSource != "" && !v.isValidEvidenceSource(r.EvidenceSource) {
 		v.errors = append(v.errors, fmt.Sprintf("invalid evidence_source: %s", r.EvidenceSource))
 		valid = false
 	}
@@ -371,42 +371,23 @@ func (v *Validator) validateEvidenceConstraints(evidence []Evidence) (isValid bo
 // Helper validation functions
 
 func (v *Validator) isValidCategory(category Category) (valid bool) {
-	for _, c := range AllCategories() {
-		if c == category {
-			return true
-		}
-	}
-	return false
+	registry := GetSchemaRegistry()
+	return registry.IsValidCategory(category)
 }
 
 func (v *Validator) isValidEvidenceSource(source EvidenceSource) (valid bool) {
-	validSources := []EvidenceSource{
-		EvidenceSourceSpamtrap,
-		EvidenceSourceHoneypot,
-		EvidenceSourceUserReport,
-		EvidenceSourceAutomatedScan,
-		EvidenceSourceManualAnalysis,
-		EvidenceSourceVulnerabilityScan,
-		EvidenceSourceResearcherAnalysis,
-		EvidenceSourceThreatIntelligence,
-		EvidenceSourceFlowAnalysis,
-		EvidenceSourceIDSIPS,
-		EvidenceSourceSIEM,
-	}
-
-	for _, s := range validSources {
-		if s == source {
-			return true
-		}
-	}
-	return false
+	registry := GetSchemaRegistry()
+	return registry.IsValidEvidenceSource(source)
 }
 
 func (v *Validator) isValidSeverity(severity Severity) (valid bool) {
-	return severity == SeverityLow ||
-		severity == SeverityMedium ||
-		severity == SeverityHigh ||
-		severity == SeverityCritical
+	registry := GetSchemaRegistry()
+	return registry.IsValidSeverity(severity)
+}
+
+func (v *Validator) isValidType(category Category, typeName string) (valid bool) {
+	registry := GetSchemaRegistry()
+	return registry.IsValidType(category, typeName)
 }
 
 func (v *Validator) isValidEmail(email string) (valid bool) {
