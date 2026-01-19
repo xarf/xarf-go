@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/santhosh-tekuri/jsonschema/v5"
+
 	"github.com/xarf/xarf-go/schemas"
 )
 
@@ -80,8 +81,8 @@ func (v *SchemaValidator) registerEmbeddedSchemas() error {
 	if err != nil {
 		return fmt.Errorf("failed to read xarf-core.json: %w", err)
 	}
-	if err := v.compiler.AddResource("xarf-core.json", strings.NewReader(string(coreData))); err != nil {
-		return fmt.Errorf("failed to add xarf-core.json: %w", err)
+	if addErr := v.compiler.AddResource("xarf-core.json", strings.NewReader(string(coreData))); addErr != nil {
+		return fmt.Errorf("failed to add xarf-core.json: %w", addErr)
 	}
 
 	// Register master schema
@@ -89,8 +90,8 @@ func (v *SchemaValidator) registerEmbeddedSchemas() error {
 	if err != nil {
 		return fmt.Errorf("failed to read xarf-v4-master.json: %w", err)
 	}
-	if err := v.compiler.AddResource("xarf-v4-master.json", strings.NewReader(string(masterData))); err != nil {
-		return fmt.Errorf("failed to add xarf-v4-master.json: %w", err)
+	if addErr := v.compiler.AddResource("xarf-v4-master.json", strings.NewReader(string(masterData))); addErr != nil {
+		return fmt.Errorf("failed to add xarf-v4-master.json: %w", addErr)
 	}
 
 	// Register type schemas

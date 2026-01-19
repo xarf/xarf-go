@@ -385,11 +385,6 @@ func (v *Validator) isValidSeverity(severity Severity) (valid bool) {
 	return registry.IsValidSeverity(severity)
 }
 
-func (v *Validator) isValidType(category Category, typeName string) (valid bool) {
-	registry := GetSchemaRegistry()
-	return registry.IsValidType(category, typeName)
-}
-
 func (v *Validator) isValidEmail(email string) (valid bool) {
 	// Uses pre-compiled regex at package level for performance
 	return emailRegex.MatchString(email)
