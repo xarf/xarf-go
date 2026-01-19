@@ -349,13 +349,14 @@ func TestValidatorEvidenceSources(t *testing.T) {
 		xarf.EvidenceSourceHoneypot,
 		xarf.EvidenceSourceUserReport,
 		xarf.EvidenceSourceAutomatedScan,
-		xarf.EvidenceSourceManualAnalysis,
 		xarf.EvidenceSourceVulnerabilityScan,
 		xarf.EvidenceSourceResearcherAnalysis,
 		xarf.EvidenceSourceThreatIntelligence,
 		xarf.EvidenceSourceFlowAnalysis,
-		xarf.EvidenceSourceIDSIPS,
-		xarf.EvidenceSourceSIEM,
+		xarf.EvidenceSourceIDSDetection,
+		xarf.EvidenceSourceFirewallLogs,
+		xarf.EvidenceSourceUserComplaint,
+		xarf.EvidenceSourceAutomatedFilter,
 	}
 
 	for _, source := range sources {
