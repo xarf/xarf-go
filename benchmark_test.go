@@ -11,7 +11,7 @@ import (
 // generateMessagingReportJSON creates a realistic messaging report JSON
 func generateMessagingReportJSON() []byte {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
@@ -48,7 +48,7 @@ func generateMessagingReportJSON() []byte {
 // generateConnectionReportJSON creates a realistic connection report JSON
 func generateConnectionReportJSON() []byte {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "b2c3d4e5-f6g7-8901-bcde-f1234567890a",
 		"timestamp":    "2024-01-15T11:00:00Z",
 		"reporter": map[string]interface{}{
@@ -84,7 +84,7 @@ func generateConnectionReportJSON() []byte {
 // generateContentReportJSON creates a realistic content report JSON
 func generateContentReportJSON() []byte {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "c3d4e5f6-g7h8-9012-cdef-234567890abc",
 		"timestamp":    "2024-01-15T12:00:00Z",
 		"reporter": map[string]interface{}{
@@ -124,7 +124,7 @@ func generateContentReportJSON() []byte {
 // generateReportWithEvidence creates a report with multiple evidence items
 func generateReportWithEvidence() []byte {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "d4e5f6g7-h8i9-0123-defg-345678901bcd",
 		"timestamp":    "2024-01-15T13:00:00Z",
 		"reporter": map[string]interface{}{

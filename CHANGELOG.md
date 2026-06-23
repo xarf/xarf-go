@@ -5,6 +5,37 @@ All notable changes to the xarf-go library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Behavioural parity with the official JavaScript library ([`@xarf/xarf`](https://www.npmjs.com/package/@xarf/xarf)).
+
+### Changed
+
+- **XARF spec upgraded to v4.2.0.** Embedded schemas refreshed to the v4.2.0
+  set (byte-identical to the JavaScript library); `XARFVersion`/`SpecVersion`
+  are now `4.2.0`. Validation is now performed against the self-contained
+  master schema (core + every category/type schema), matching JS — this is
+  stricter than before (type-specific required fields and valid category/type
+  combinations are enforced).
+- **Evidence format**: `Evidence.Payload` is now base64-encoded, `Evidence.Hash`
+  is algorithm-prefixed (`"sha256:<hex>"`), and a `Size` field was added —
+  matching `createEvidence()` in the JS library.
+
+### Added
+
+- **Package-level `Parse` / `ParseString`** returning `ParseResult{Report,
+  Errors, Warnings, Info}`. v3 reports are auto-detected and converted (with a
+  deprecation warning); validation failures are returned in `Errors` rather than
+  as a Go error (an error is returned only for malformed JSON or input exceeding
+  `ParseOptions.MaxInputBytes`). Supports `Strict` and `ShowMissingOptional`.
+- **`CreateReport`** (auto-fills `xarf_version`, `report_id`, `timestamp`) and
+  **`CreateEvidence`** (base64 payload, prefixed hash, size; sha256/sha512/sha1/md5).
+- **JS-mirror v3 helpers**: `IsXARFv3`, `ConvertV3toV4`, `GetV3DeprecationWarning`,
+  matching the JS detection and type-mapping semantics.
+- **Strict mode** promotes `x-recommended` schema fields to required, and reports
+  unknown fields as warnings (errors in strict mode).
+- Version exports: `BundledSpecVersion` and `Version`.
+
 ## [1.0.0] - 2025-11-30
 
 ### Added

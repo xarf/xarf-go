@@ -17,7 +17,7 @@ func TestEmptyFields(t *testing.T) {
 		{
 			name: "Missing category",
 			jsonStr: `{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "550e8400-e29b-41d4-a716-446655440000",
 				"timestamp": "2024-01-15T10:30:00Z",
 				"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
@@ -30,7 +30,7 @@ func TestEmptyFields(t *testing.T) {
 		{
 			name: "Empty reporter org",
 			jsonStr: `{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "550e8400-e29b-41d4-a716-446655440000",
 				"timestamp": "2024-01-15T10:30:00Z",
 				"reporter": {"org": "", "contact": "test@example.com", "domain": "example.com"},
@@ -44,7 +44,7 @@ func TestEmptyFields(t *testing.T) {
 		{
 			name: "Missing timestamp",
 			jsonStr: `{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "550e8400-e29b-41d4-a716-446655440000",
 				"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
 				"sender": {"org": "Sender", "contact": "sender@example.com", "domain": "example.com"},
@@ -57,7 +57,7 @@ func TestEmptyFields(t *testing.T) {
 		{
 			name: "Missing report_id",
 			jsonStr: `{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"timestamp": "2024-01-15T10:30:00Z",
 				"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
 				"sender": {"org": "Sender", "contact": "sender@example.com", "domain": "example.com"},
@@ -85,7 +85,7 @@ func TestUnicodeHandling(t *testing.T) {
 	parser := xarf.NewParser(false)
 
 	jsonData := []byte(`{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id": "550e8400-e29b-41d4-a716-446655440000",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {"org": "测试组织 🚀", "contact": "test@example.com", "domain": "example.com"},
@@ -136,7 +136,7 @@ func TestTimestampFormats(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			jsonData := []byte(`{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "550e8400-e29b-41d4-a716-446655440000",
 				"timestamp": "` + tt.timestamp + `",
 				"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
@@ -160,7 +160,7 @@ func TestLargeReports(t *testing.T) {
 
 	// Build report with 100 evidence items
 	jsonStart := `{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id": "550e8400-e29b-41d4-a716-446655440000",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
@@ -239,7 +239,7 @@ func TestBoundaryValues(t *testing.T) {
 			var jsonData string
 			if tt.field == "confidence" {
 				jsonData = `{
-					"xarf_version": "4.0.0",
+					"xarf_version": "4.2.0",
 					"report_id": "550e8400-e29b-41d4-a716-446655440000",
 					"timestamp": "2024-01-15T10:30:00Z",
 					"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
@@ -251,7 +251,7 @@ func TestBoundaryValues(t *testing.T) {
 				}`
 			} else {
 				jsonData = `{
-					"xarf_version": "4.0.0",
+					"xarf_version": "4.2.0",
 					"report_id": "550e8400-e29b-41d4-a716-446655440000",
 					"timestamp": "2024-01-15T10:30:00Z",
 					"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
@@ -276,7 +276,7 @@ func TestNullValues(t *testing.T) {
 	parser := xarf.NewParser(false)
 
 	jsonData := []byte(`{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id": "550e8400-e29b-41d4-a716-446655440000",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {"org": "Test", "contact": "test@example.com", "domain": "example.com"},
@@ -316,10 +316,10 @@ func TestMalformedJSON(t *testing.T) {
 		name    string
 		jsonStr string
 	}{
-		{"Missing closing brace", `{"xarf_version": "4.0.0"`},
-		{"Invalid JSON syntax", `{xarf_version: "4.0.0"}`},
-		{"Trailing comma", `{"xarf_version": "4.0.0",}`},
-		{"Unquoted key", `{xarf_version: "4.0.0"}`},
+		{"Missing closing brace", `{"xarf_version": "4.2.0"`},
+		{"Invalid JSON syntax", `{xarf_version: "4.2.0"}`},
+		{"Trailing comma", `{"xarf_version": "4.2.0",}`},
+		{"Unquoted key", `{xarf_version: "4.2.0"}`},
 		{"Empty JSON", ``},
 		{"Only whitespace", `   `},
 	}
@@ -351,7 +351,7 @@ func TestSpecialCharacters(t *testing.T) {
 	for _, chars := range specialChars {
 		t.Run("Special chars: "+chars, func(t *testing.T) {
 			jsonData := []byte(`{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "550e8400-e29b-41d4-a716-446655440000",
 				"timestamp": "2024-01-15T10:30:00Z",
 				"reporter": {"org": "Test` + chars + `", "contact": "test@example.com", "domain": "example.com"},

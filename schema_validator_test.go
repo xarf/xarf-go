@@ -40,12 +40,15 @@ func TestSchemaValidatorValidateJSON(t *testing.T) {
 		{
 			name: "valid minimal report",
 			json: `{
-				"xarf_version": "4.0.0",
-				"report_id": "test-123",
+				"xarf_version": "4.2.0",
+				"report_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 				"timestamp": "2026-01-19T12:00:00Z",
 				"source_identifier": "192.0.2.100",
+				"source_port": 25,
 				"category": "messaging",
 				"type": "spam",
+				"protocol": "smtp",
+				"smtp_from": "spammer@example.com",
 				"reporter": {
 					"org": "Test Org",
 					"contact": "test@example.com",
@@ -86,39 +89,19 @@ func TestSchemaValidatorValidateReport(t *testing.T) {
 	ResetSchemaValidator()
 	validator := GetSchemaValidator()
 
-	t.Run("valid base report", func(t *testing.T) {
-		report := &Report{
-			XARFVersion:      XARFVersion,
-			ReportID:         "test-123",
-			Timestamp:        time.Now(),
-			SourceIdentifier: "192.0.2.100",
-			Category:         CategoryMessaging,
-			Type:             "spam",
-			Reporter: ContactInfo{
-				Org:     "Test Org",
-				Contact: "test@example.com",
-				Domain:  "example.com",
-			},
-			Sender: ContactInfo{
-				Org:     "Sender Org",
-				Contact: "sender@example.com",
-				Domain:  "example.com",
-			},
-		}
+	sourcePort := 25
 
-		result := validator.ValidateReport(report)
-		assert.True(t, result.Valid)
-	})
-
-	t.Run("valid messaging report", func(t *testing.T) {
+	t.Run("valid messaging report (base fields)", func(t *testing.T) {
 		report := &MessagingReport{
 			Report: Report{
 				XARFVersion:      XARFVersion,
-				ReportID:         "test-456",
+				ReportID:         "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 				Timestamp:        time.Now(),
 				SourceIdentifier: "192.0.2.100",
+				SourcePort:       &sourcePort,
 				Category:         CategoryMessaging,
 				Type:             "spam",
+				EvidenceSource:   EvidenceSourceSpamtrap,
 				Reporter: ContactInfo{
 					Org:     "Test Org",
 					Contact: "test@example.com",
@@ -135,18 +118,50 @@ func TestSchemaValidatorValidateReport(t *testing.T) {
 		}
 
 		result := validator.ValidateReport(report)
-		assert.True(t, result.Valid)
+		assert.True(t, result.Valid, "errors: %v", result.Errors)
+	})
+
+	t.Run("valid messaging report", func(t *testing.T) {
+		report := &MessagingReport{
+			Report: Report{
+				XARFVersion:      XARFVersion,
+				ReportID:         "b2c3d4e5-f6a7-8901-bcde-f1234567890a",
+				Timestamp:        time.Now(),
+				SourceIdentifier: "192.0.2.100",
+				SourcePort:       &sourcePort,
+				Category:         CategoryMessaging,
+				Type:             "spam",
+				EvidenceSource:   EvidenceSourceSpamtrap,
+				Reporter: ContactInfo{
+					Org:     "Test Org",
+					Contact: "test@example.com",
+					Domain:  "example.com",
+				},
+				Sender: ContactInfo{
+					Org:     "Sender Org",
+					Contact: "sender@example.com",
+					Domain:  "example.com",
+				},
+			},
+			Protocol: "smtp",
+			SMTPFrom: "spammer@example.com",
+		}
+
+		result := validator.ValidateReport(report)
+		assert.True(t, result.Valid, "errors: %v", result.Errors)
 	})
 
 	t.Run("valid connection report", func(t *testing.T) {
+		connSourcePort := 12345
 		report := &ConnectionReport{
 			Report: Report{
 				XARFVersion:      XARFVersion,
-				ReportID:         "test-789",
+				ReportID:         "c3d4e5f6-a7b8-9012-cdef-234567890abc",
 				Timestamp:        time.Now(),
 				SourceIdentifier: "192.0.2.100",
 				Category:         CategoryConnection,
 				Type:             "ddos",
+				EvidenceSource:   EvidenceSourceHoneypot,
 				Reporter: ContactInfo{
 					Org:     "Test Org",
 					Contact: "test@example.com",
@@ -160,10 +175,12 @@ func TestSchemaValidatorValidateReport(t *testing.T) {
 			},
 			DestinationIP: "203.0.113.10",
 			Protocol:      "tcp",
+			FirstSeen:     "2026-01-19T12:00:00Z",
+			SourcePort:    &connSourcePort,
 		}
 
 		result := validator.ValidateReport(report)
-		assert.True(t, result.Valid)
+		assert.True(t, result.Valid, "errors: %v", result.Errors)
 	})
 }
 
@@ -173,12 +190,15 @@ func TestSchemaValidatorValidateJSONWithTypeSchema(t *testing.T) {
 
 	// Test with a report that has category and type for type-specific validation
 	json := `{
-		"xarf_version": "4.0.0",
-		"report_id": "test-123",
+		"xarf_version": "4.2.0",
+		"report_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		"timestamp": "2026-01-19T12:00:00Z",
 		"source_identifier": "192.0.2.100",
+		"source_port": 25,
 		"category": "messaging",
 		"type": "spam",
+		"protocol": "smtp",
+		"smtp_from": "spammer@example.com",
 		"reporter": {
 			"org": "Test Org",
 			"contact": "test@example.com",

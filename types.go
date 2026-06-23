@@ -4,12 +4,19 @@ import (
 	"time"
 )
 
-// XARFVersion is the current XARF specification version
-const XARFVersion = "4.0.0"
+// XARFVersion is the current XARF specification version targeted by this library.
+const XARFVersion = "4.2.0"
 
 // SpecVersion is the XARF specification version this library supports
-// This is an alias for XARFVersion for clarity in documentation
+// (alias for XARFVersion, mirrors the JavaScript library's SPEC_VERSION).
 const SpecVersion = XARFVersion
+
+// BundledSpecVersion is the tagged xarf-spec version the embedded schemas were
+// taken from (mirrors the JavaScript library's BUNDLED_SPEC_VERSION).
+const BundledSpecVersion = "v4.2.0"
+
+// Version is the version of this library (mirrors the JavaScript library's VERSION).
+const Version = "1.1.0"
 
 // Category represents the XARF report category
 type Category string
@@ -96,12 +103,17 @@ type ContactInfo struct {
 	Domain  string `json:"domain"`
 }
 
-// Evidence represents an evidence item
+// Evidence represents an evidence item.
+//
+// To mirror the JavaScript library's createEvidence(), Payload is base64-encoded,
+// Hash is prefixed with the algorithm ("sha256:<hex>"), and Size is the decoded
+// payload length in bytes.
 type Evidence struct {
 	ContentType string `json:"content_type"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 	Payload     string `json:"payload"`
 	Hash        string `json:"hash,omitempty"`
+	Size        int    `json:"size,omitempty"`
 }
 
 // Occurrence represents the time period of the incident
@@ -169,6 +181,9 @@ type ConnectionReport struct {
 	// Required for connection
 	DestinationIP string `json:"destination_ip"`
 	Protocol      string `json:"protocol"`
+
+	// first_seen is required for connection types in XARF v4.2.0
+	FirstSeen string `json:"first_seen,omitempty"`
 
 	// Optional connection fields
 	DestinationPort *int   `json:"destination_port,omitempty"`

@@ -89,7 +89,7 @@ type ReportOptions struct {
 	Target           *Target
 }
 
-// GenerateReport generates a complete XARF v4.0.0 report
+// GenerateReport generates a complete XARF v4.2.0 report
 func (g *Generator) GenerateReport(opts *ReportOptions) (report *Report, err error) {
 	// Validate required fields
 	if opts.SourceIdentifier == "" {
