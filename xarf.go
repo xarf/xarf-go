@@ -2,7 +2,7 @@
 // (eXtended Abuse Reporting Format) reports.
 //
 // The package-level Parse, CreateReport, and CreateEvidence functions mirror the
-// behaviour of the official JavaScript library (@xarf/xarf): Parse returns a
+// behavior of the official JavaScript library (@xarf/xarf): Parse returns a
 // result carrying validation errors and warnings rather than failing, v3 reports
 // are auto-detected and converted, and validation is schema-driven against the
 // embedded v4.2.0 schemas.
@@ -30,7 +30,7 @@ type ValidationInfo struct {
 	Message string `json:"message"`
 }
 
-// ParseOptions controls Parse behaviour. Mirrors the JavaScript ParseOptions.
+// ParseOptions controls Parse behavior. Mirrors the JavaScript ParseOptions.
 type ParseOptions struct {
 	// Strict reports warnings (e.g. unknown fields) and x-recommended fields as errors.
 	Strict bool
@@ -49,7 +49,7 @@ type ParseResult struct {
 	Info     []ValidationInfo       `json:"info,omitempty"`
 }
 
-// CreateReportOptions controls CreateReport behaviour.
+// CreateReportOptions controls CreateReport behavior.
 type CreateReportOptions struct {
 	Strict              bool
 	ShowMissingOptional bool
@@ -63,7 +63,15 @@ type CreateReportResult struct {
 	Info     []ValidationInfo       `json:"info,omitempty"`
 }
 
-// EvidenceOptions controls CreateEvidence behaviour. Mirrors the JavaScript EvidenceOptions.
+// Supported evidence hash algorithms (mirroring the JavaScript options).
+const (
+	hashSHA256 = "sha256"
+	hashSHA512 = "sha512"
+	hashSHA1   = "sha1"
+	hashMD5    = "md5"
+)
+
+// EvidenceOptions controls CreateEvidence behavior. Mirrors the JavaScript EvidenceOptions.
 type EvidenceOptions struct {
 	Description string
 	// HashAlgorithm is one of "sha256" (default), "sha512", "sha1", "md5".
@@ -162,7 +170,7 @@ func CreateReport(input map[string]interface{}, options *CreateReportOptions) Cr
 // algorithm-prefixed hash ("sha256:<hex>"), and a byte size. Mirrors the
 // JavaScript createEvidence().
 func CreateEvidence(contentType string, payload []byte, options *EvidenceOptions) Evidence {
-	algorithm := "sha256"
+	algorithm := hashSHA256
 	description := ""
 	if options != nil {
 		if options.HashAlgorithm != "" {
@@ -186,13 +194,13 @@ func CreateEvidence(contentType string, payload []byte, options *EvidenceOptions
 // Unknown algorithms fall back to sha256, matching the JS default.
 func computeHash(algorithm string, data []byte) string {
 	switch algorithm {
-	case "sha512":
+	case hashSHA512:
 		sum := sha512.Sum512(data)
 		return hex.EncodeToString(sum[:])
-	case "sha1":
+	case hashSHA1:
 		sum := sha1.Sum(data) //nolint:gosec // parity with JS evidence hashing options
 		return hex.EncodeToString(sum[:])
-	case "md5":
+	case hashMD5:
 		sum := md5.Sum(data) //nolint:gosec // parity with JS evidence hashing options
 		return hex.EncodeToString(sum[:])
 	default: // sha256
@@ -272,7 +280,7 @@ func collectMissingOptionalFields(data map[string]interface{}) []ValidationInfo 
 	}
 	sort.Strings(names)
 
-	var info []ValidationInfo
+	info := make([]ValidationInfo, 0, len(names))
 	for _, name := range names {
 		if _, present := data[name]; present {
 			continue

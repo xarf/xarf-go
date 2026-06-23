@@ -41,10 +41,10 @@ func (g *Generator) GenerateTimestamp() (timestamp string) {
 func (g *Generator) GenerateHash(data []byte, algorithm string) (
 	hash string, err error) {
 	switch algorithm {
-	case "sha256":
+	case hashSHA256:
 		hash := sha256.Sum256(data)
 		return hex.EncodeToString(hash[:]), nil
-	case "sha512":
+	case hashSHA512:
 		hash := sha512.Sum512(data)
 		return hex.EncodeToString(hash[:]), nil
 	default:
@@ -56,7 +56,7 @@ func (g *Generator) GenerateHash(data []byte, algorithm string) (
 func (g *Generator) AddEvidence(contentType, description string,
 	payload []byte, hashAlgorithm string) (evidence *Evidence, err error) {
 	if hashAlgorithm == "" {
-		hashAlgorithm = "sha256"
+		hashAlgorithm = hashSHA256
 	}
 
 	hash, err := g.GenerateHash(payload, hashAlgorithm)

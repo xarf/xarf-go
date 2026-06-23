@@ -81,13 +81,13 @@ func (v *SchemaValidator) load() error {
 	}
 	v.masterSchema = master
 
-	if err := v.compileTypeSchemas(compiler); err != nil {
+	if err = v.compileTypeSchemas(compiler); err != nil {
 		return fmt.Errorf("failed to compile type schemas: %w", err)
 	}
 
 	// Strict compiler — x-recommended promoted to required.
 	strictCompiler := newCompiler()
-	if err := registerEmbeddedSchemas(strictCompiler, true); err != nil {
+	if err = registerEmbeddedSchemas(strictCompiler, true); err != nil {
 		return fmt.Errorf("failed to register strict schemas: %w", err)
 	}
 	strictMaster, err := strictCompiler.Compile(masterSchemaID)
