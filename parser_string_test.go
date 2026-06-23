@@ -9,7 +9,7 @@ import (
 
 func TestParseString(t *testing.T) {
 	jsonStr := `{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id": "test-123",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {
@@ -55,7 +55,7 @@ func TestParseStringInvalid(t *testing.T) {
 
 func TestValidateString(t *testing.T) {
 	validJSON := `{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id": "test-123",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {
@@ -82,7 +82,7 @@ func TestValidateString(t *testing.T) {
 
 func TestValidateStringInvalid(t *testing.T) {
 	invalidJSON := `{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"category": "messaging"
 	}`
 
@@ -94,7 +94,7 @@ func TestValidateStringInvalid(t *testing.T) {
 
 func TestParseByCategoryUnknown(t *testing.T) {
 	jsonStr := `{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id": "test-123",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {

@@ -144,7 +144,7 @@ func TestCategoryField(t *testing.T) {
 		{
 			name: "Using category field (v4 spec)",
 			json: `{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "test-123",
 				"timestamp": "2024-01-15T10:30:00Z",
 				"reporter": {
@@ -168,7 +168,7 @@ func TestCategoryField(t *testing.T) {
 		{
 			name: "Using class field (should fail - no longer supported)",
 			json: `{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "test-456",
 				"timestamp": "2024-01-15T10:30:00Z",
 				"reporter": {

@@ -10,7 +10,7 @@ import (
 
 func TestParseValidMessagingReport(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
@@ -50,7 +50,7 @@ func TestParseValidMessagingReport(t *testing.T) {
 
 func TestParseValidConnectionReport(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "b2c3d4e5-f6g7-8901-bcde-f1234567890a",
 		"timestamp":    "2024-01-15T11:00:00Z",
 		"reporter": map[string]interface{}{
@@ -91,7 +91,7 @@ func TestParseValidConnectionReport(t *testing.T) {
 
 func TestParseValidContentReport(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "c3d4e5f6-g7h8-9012-cdef-234567890abc",
 		"timestamp":    "2024-01-15T12:00:00Z",
 		"reporter": map[string]interface{}{
@@ -128,7 +128,7 @@ func TestParseValidContentReport(t *testing.T) {
 
 func TestParseWithSameOrg(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "test-123",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
@@ -162,7 +162,7 @@ func TestParseWithSameOrg(t *testing.T) {
 
 func TestParseWithDifferentOrg(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "test-123",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
@@ -208,7 +208,7 @@ func TestParseInvalidJSON(t *testing.T) {
 
 func TestParseMissingRequiredFields(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"category":     "messaging",
 		// Missing required fields (report_id, reporter, sender, etc.)
 	}
@@ -260,7 +260,7 @@ func TestParseInvalidVersion(t *testing.T) {
 
 func TestValidate(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id":    "test-123",
 		"timestamp":    "2024-01-15T10:30:00Z",
 		"reporter": map[string]interface{}{
@@ -290,7 +290,7 @@ func TestValidate(t *testing.T) {
 
 func TestValidateInvalid(t *testing.T) {
 	reportData := map[string]interface{}{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		// Missing required fields
 	}
 
@@ -321,7 +321,7 @@ func TestParseAllCategories(t *testing.T) {
 	for _, tc := range categories {
 		t.Run(string(tc.category), func(t *testing.T) {
 			reportData := map[string]interface{}{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id":    "test-123",
 				"timestamp":    "2024-01-15T10:30:00Z",
 				"reporter": map[string]interface{}{

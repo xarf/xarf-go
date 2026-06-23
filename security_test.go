@@ -24,7 +24,7 @@ func TestInputSanitization(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Parser should handle malicious input safely by treating it as data
 			jsonData := []byte(`{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"report_id": "550e8400-e29b-41d4-a716-446655440000",
 				"timestamp": "2024-01-15T10:30:00Z",
 				"reporter": {"org": "` + tt.input + `", "contact": "test@example.com", "domain": "example.com"},
@@ -57,7 +57,7 @@ func TestExcessiveDataHandling(t *testing.T) {
 	largePayload := strings.Repeat("A", 10*1024*1024) // 10MB
 
 	jsonData := []byte(`{
-		"xarf_version": "4.0.0",
+		"xarf_version": "4.2.0",
 		"report_id": "550e8400-e29b-41d4-a716-446655440000",
 		"timestamp": "2024-01-15T10:30:00Z",
 		"reporter": {"org": "Test", "contact": "test@example.com"},
@@ -104,7 +104,7 @@ func TestSecureDefaults(t *testing.T) {
 	}
 
 	// Verify secure defaults
-	if report.XARFVersion != "4.0.0" {
+	if report.XARFVersion != "4.2.0" {
 		t.Error("Should use latest XARF version by default")
 	}
 

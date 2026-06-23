@@ -29,7 +29,7 @@ func TestValidatorAllCategories(t *testing.T) {
 	for _, tc := range categories {
 		t.Run(string(tc.category), func(t *testing.T) {
 			report := &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 				Timestamp:        now,
 				Category:         tc.category,
@@ -66,7 +66,7 @@ func TestInvalidCategory(t *testing.T) {
 	now := time.Now().UTC()
 
 	report := &xarf.Report{
-		XARFVersion:      "4.0.0",
+		XARFVersion:      "4.2.0",
 		ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:        now,
 		Category:         "invalid_category",
@@ -102,7 +102,7 @@ func TestValidatorCategorySpecificFields(t *testing.T) {
 	destPort := 80
 	connReport := &xarf.ConnectionReport{
 		Report: xarf.Report{
-			XARFVersion:      "4.0.0",
+			XARFVersion:      "4.2.0",
 			ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 			Timestamp:        now,
 			Category:         xarf.CategoryConnection,
@@ -152,7 +152,7 @@ func TestValidatorMissingRequiredFields(t *testing.T) {
 		{
 			name: "Missing ReportID",
 			report: &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				Timestamp:        time.Now(),
 				Category:         xarf.CategoryMessaging,
 				Type:             "spam",
@@ -162,7 +162,7 @@ func TestValidatorMissingRequiredFields(t *testing.T) {
 		{
 			name: "Missing Category",
 			report: &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 				Timestamp:        time.Now(),
 				Type:             "spam",
@@ -172,7 +172,7 @@ func TestValidatorMissingRequiredFields(t *testing.T) {
 		{
 			name: "Missing SourceIdentifier",
 			report: &xarf.Report{
-				XARFVersion: "4.0.0",
+				XARFVersion: "4.2.0",
 				ReportID:    "550e8400-e29b-41d4-a716-446655440000",
 				Timestamp:   time.Now(),
 				Category:    xarf.CategoryMessaging,
@@ -206,7 +206,7 @@ func TestValidatorInvalidFieldValues(t *testing.T) {
 		{
 			name: "Invalid confidence > 1.0",
 			report: &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 				Timestamp:        now,
 				Category:         xarf.CategoryMessaging,
@@ -218,7 +218,7 @@ func TestValidatorInvalidFieldValues(t *testing.T) {
 		{
 			name: "Invalid confidence < 0.0",
 			report: &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 				Timestamp:        now,
 				Category:         xarf.CategoryMessaging,
@@ -230,7 +230,7 @@ func TestValidatorInvalidFieldValues(t *testing.T) {
 		{
 			name: "Invalid UUID format",
 			report: &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				ReportID:         "not-a-uuid",
 				Timestamp:        now,
 				Category:         xarf.CategoryMessaging,
@@ -260,7 +260,7 @@ func TestValidatorOptionalFields(t *testing.T) {
 
 	// Report with all optional fields filled
 	report := &xarf.Report{
-		XARFVersion:      "4.0.0",
+		XARFVersion:      "4.2.0",
 		ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 		Timestamp:        now,
 		Category:         xarf.CategoryMessaging,
@@ -311,7 +311,7 @@ func TestValidatorSeverityLevels(t *testing.T) {
 	for _, severity := range severities {
 		t.Run(string(severity), func(t *testing.T) {
 			report := &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 				Timestamp:        now,
 				Category:         xarf.CategoryMessaging,
@@ -362,7 +362,7 @@ func TestValidatorEvidenceSources(t *testing.T) {
 	for _, source := range sources {
 		t.Run(string(source), func(t *testing.T) {
 			report := &xarf.Report{
-				XARFVersion:      "4.0.0",
+				XARFVersion:      "4.2.0",
 				ReportID:         "550e8400-e29b-41d4-a716-446655440000",
 				Timestamp:        now,
 				Category:         xarf.CategoryMessaging,

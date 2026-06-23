@@ -34,7 +34,7 @@ func TestIsV3Report(t *testing.T) {
 		{
 			name: "V4 report",
 			data: `{
-				"xarf_version": "4.0.0",
+				"xarf_version": "4.2.0",
 				"reporter": {}
 			}`,
 			expected: false,

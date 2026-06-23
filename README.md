@@ -1,6 +1,6 @@
 # XARF Go Library
 
-![XARF Spec](https://img.shields.io/badge/XARF%20Spec-v4.0.0-blue)
+![XARF Spec](https://img.shields.io/badge/XARF%20Spec-v4.2.0-blue)
 [![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org/dl/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/xarf/xarf-go?status.svg)](https://godoc.org/github.com/xarf/xarf-go)
@@ -8,14 +8,14 @@
 A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Reporting Format) reports.
 
 **Library Version:** v1.0.0
-**XARF Specification:** v4.0.0
+**XARF Specification:** v4.2.0
 
 ## Features
 
 - **Parse** XARF v4 JSON reports with automatic type detection
 - **Validate** reports against XARF v4 specification
 - **Generate** compliant XARF reports programmatically
-- **Strict Compliance** - Requires "category" field as per XARF v4.0.0 specification
+- **Strict Compliance** - Requires "category" field as per XARF v4.2.0 specification
 - **Support** for all 7 XARF categories:
   - Messaging
   - Connection
@@ -35,6 +35,49 @@ A Go library for parsing, validating, and generating XARF v4 (eXtended Abuse Rep
 go get github.com/xarf/xarf-go
 ```
 
+## JavaScript-parity API
+
+The package-level `Parse`, `CreateReport`, and `CreateEvidence` functions mirror
+the official JavaScript library ([`@xarf/xarf`](https://www.npmjs.com/package/@xarf/xarf)):
+the same schema-driven validation (against the embedded v4.2.0 schemas), v3
+auto-detection and conversion, strict mode that promotes `x-recommended` fields
+to required, and identical evidence encoding.
+
+```go
+import "github.com/xarf/xarf-go"
+
+// Parse returns a result with errors/warnings rather than failing; an error is
+// returned only for malformed JSON or input exceeding MaxInputBytes. v3 reports
+// are auto-detected and converted (with a deprecation warning in Warnings).
+result, err := xarf.Parse(data, &xarf.ParseOptions{ShowMissingOptional: true})
+if err != nil { /* malformed JSON */ }
+if len(result.Errors) == 0 {
+    // result.Report is the validated report object (map[string]interface{})
+}
+// result.Warnings   — unknown fields, v3 deprecation
+// result.Info        — missing optional/recommended fields (ShowMissingOptional)
+
+// CreateReport auto-fills xarf_version, report_id (UUID), and timestamp.
+created := xarf.CreateReport(map[string]any{
+    "category": "messaging", "type": "spam",
+    "source_identifier": "192.0.2.100", "source_port": 25,
+    "protocol": "smtp", "smtp_from": "spammer@example.com",
+    "evidence_source": "spamtrap",
+    "reporter": map[string]any{"org": "Acme", "contact": "abuse@acme.example", "domain": "acme.example"},
+    "sender":   map[string]any{"org": "Acme", "contact": "abuse@acme.example", "domain": "acme.example"},
+}, nil)
+
+// CreateEvidence base64-encodes the payload and prefixes the hash with the algorithm.
+ev := xarf.CreateEvidence("message/rfc822", rawEmail, &xarf.EvidenceOptions{
+    Description: "Original spam email", HashAlgorithm: "sha256",
+})
+// ev.Payload (base64), ev.Hash ("sha256:<hex>"), ev.Size
+```
+
+`ParseOptions.Strict` reports warnings and `x-recommended` fields as errors.
+Version constants: `xarf.SpecVersion` (`"4.2.0"`), `xarf.BundledSpecVersion`
+(`"v4.2.0"`), `xarf.Version` (library version).
+
 ## Quick Start
 
 ### Parsing a XARF Report
@@ -51,7 +94,7 @@ import (
 
 func main() {
     jsonData := []byte(`{
-        "xarf_version": "4.0.0",
+        "xarf_version": "4.2.0",
         "report_id": "550e8400-e29b-41d4-a716-446655440000",
         "timestamp": "2024-01-15T10:30:00Z",
         "reporter": {
@@ -225,7 +268,7 @@ func main() {
 
     report := xarf.MessagingReport{
         Report: xarf.Report{
-            XARFVersion:      "4.0.0",
+            XARFVersion:      "4.2.0",
             ReportID:         "550e8400-e29b-41d4-a716-446655440000",
             Timestamp:        time.Now(),
             Reporter:         contactInfo, // You detected it
@@ -275,7 +318,7 @@ func main() {
 
     report := xarf.MessagingReport{
         Report: xarf.Report{
-            XARFVersion:      "4.0.0",
+            XARFVersion:      "4.2.0",
             ReportID:         "550e8400-e29b-41d4-a716-446655440001",
             Timestamp:        time.Now(),
             Reporter:         reporter, // Customer who detected abuse
@@ -410,7 +453,7 @@ Apache License 2.0 - see [LICENSE](LICENSE) file for details.
 
 ## Specification Compliance
 
-This library strictly implements the XARF v4.0.0 specification, requiring the "category" field for all reports. Reports using the deprecated "class" field will fail validation.
+This library strictly implements the XARF v4.2.0 specification, requiring the "category" field for all reports. Reports using the deprecated "class" field will fail validation.
 
 **Important:**
 - ✅ Only "category" field is accepted (XARF v4 spec requirement)
@@ -430,6 +473,6 @@ This library strictly implements the XARF v4.0.0 specification, requiring the "c
 ## Version Information
 
 - **Library Version:** v1.0.0
-- **XARF Specification:** v4.0.0
+- **XARF Specification:** v4.2.0
 
-This library implements the **XARF v4.0.0** specification. The library uses independent versioning starting from v1.0.0, which allows the library version to evolve independently of the XARF specification version.
+This library implements the **XARF v4.2.0** specification. The library uses independent versioning starting from v1.0.0, which allows the library version to evolve independently of the XARF specification version.
