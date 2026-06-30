@@ -15,7 +15,17 @@ import (
 // differ from the older byte-oriented helpers in v3_compat.go).
 
 // v3TypeMapping maps a XARF v3 ReportType to a v4 category and type.
-// Mirrors V3_TYPE_MAPPING in the JavaScript library.
+//
+// The base set mirrors V3_TYPE_MAPPING in the JavaScript library (hyphenated
+// spellings such as "Login-Attack"). Deployed XARF v3 traffic, however, uses
+// the CamelCase spellings defined by the v3 schema ("DOS", "PortScan",
+// "LoginAttack"); those are added as aliases so real reports convert.
+//
+// Several other schema-defined ReportTypes (ChildAbuse, Trademark, Exploit,
+// OpenService, WebCrawler, PotentiallyCompromisedAccount, Harassment) are
+// intentionally NOT mapped here: they either have no v4.2.0 type, or their v4
+// type requires fields the converter cannot populate from v3 data. They surface
+// as a clear "unknown ReportType" error rather than producing an invalid v4 doc.
 var v3TypeMapping = map[string]struct {
 	Category Category
 	Type     string
@@ -24,10 +34,13 @@ var v3TypeMapping = map[string]struct {
 	"spam":         {CategoryMessaging, "spam"},
 	"Login-Attack": {CategoryConnection, "login_attack"},
 	"login-attack": {CategoryConnection, "login_attack"},
+	"LoginAttack":  {CategoryConnection, "login_attack"}, // v3 schema spelling
 	"Port-Scan":    {CategoryConnection, "port_scan"},
 	"port-scan":    {CategoryConnection, "port_scan"},
+	"PortScan":     {CategoryConnection, "port_scan"}, // v3 schema spelling
 	"DDoS":         {CategoryConnection, "ddos"},
 	"ddos":         {CategoryConnection, "ddos"},
+	"DOS":          {CategoryConnection, "ddos"}, // v3 schema spelling
 	"Phishing":     {CategoryContent, "phishing"},
 	"phishing":     {CategoryContent, "phishing"},
 	"Malware":      {CategoryContent, "malware"},
@@ -108,7 +121,9 @@ func ConvertV3toV4(v3 map[string]interface{}, warnings *[]string) (map[string]in
 			"converted_at":         time.Now().UTC().Format(time.RFC3339),
 		},
 	}
-	if desc, ok := report["AttackDescription"].(string); ok && desc != "" {
+	// description comes from the schema's free-text field ReporterNotes; the older
+	// AttackDescription (non-schema) is kept as a fallback for other v3 dialects.
+	if desc := stringOr(report["ReporterNotes"], stringOr(report["AttackDescription"], "")); desc != "" {
 		v4["description"] = desc
 	}
 	if ev := convertV3Evidence(report, warnings); ev != nil {
@@ -122,7 +137,7 @@ func ConvertV3toV4(v3 map[string]interface{}, warnings *[]string) (map[string]in
 		}
 	}
 
-	if err := addV3CategoryFields(v4, mapping.Category, report); err != nil {
+	if err := addV3CategoryFields(v4, mapping.Category, report, warnings); err != nil {
 		return nil, err
 	}
 	return v4, nil
@@ -155,8 +170,13 @@ func extractV3SourceIdentifier(report map[string]interface{}) (string, error) {
 	if u, ok := report["Url"].(string); ok && u != "" {
 		return u, nil
 	}
+	// SourceUrl is the schema-canonical URL field for content-class v3 reports
+	// (e.g. Phishing/Malware), which carry no IP.
+	if u, ok := report["SourceUrl"].(string); ok && u != "" {
+		return u, nil
+	}
 	return "", NewParseError(
-		"cannot convert v3 report: no source identifier found (expected Source.IP, SourceIp, Source.URL, or Url)", nil)
+		"cannot convert v3 report: no source identifier found (expected Source.IP, SourceIp, Source.URL, Url, or SourceUrl)", nil)
 }
 
 // extractV3ContactInfo mirrors extractContactInfo().
@@ -186,11 +206,15 @@ func extractV3ContactInfo(reporterInfo map[string]interface{}, warnings *[]strin
 	return map[string]interface{}{"org": org, "contact": contact, "domain": parts[1]}, nil
 }
 
-// convertV3Evidence mirrors convertEvidence() (uses Attachment, falling back to Samples).
+// convertV3Evidence converts v3 evidence samples to v4 evidence items. The
+// schema-canonical source is the Report.Samples array, whose items carry
+// Payload (+ Base64Encoded) and ContentType; Attachment/Data are accepted as
+// fallbacks for other v3 dialects. v4 evidence_item.payload is always
+// base64-encoded, with hash and size computed over the decoded bytes.
 func convertV3Evidence(report map[string]interface{}, warnings *[]string) []interface{} {
-	raw, ok := report["Attachment"].([]interface{})
+	raw, ok := report["Samples"].([]interface{})
 	if !ok || len(raw) == 0 {
-		raw, ok = report["Samples"].([]interface{})
+		raw, ok = report["Attachment"].([]interface{})
 		if !ok || len(raw) == 0 {
 			return nil
 		}
@@ -202,19 +226,38 @@ func convertV3Evidence(report map[string]interface{}, warnings *[]string) []inte
 		if !ok {
 			continue
 		}
-		dataStr, _ := att["Data"].(string)
-		decoded, _ := base64.StdEncoding.DecodeString(dataStr)
-		sum := sha256.Sum256(decoded)
+		payloadStr, _ := att["Payload"].(string)
+		if payloadStr == "" {
+			payloadStr, _ = att["Data"].(string) // non-schema dialect fallback
+		}
+
+		// Resolve the raw evidence bytes: when the v3 sample is already base64,
+		// decode it; otherwise the payload is literal text. v4 always stores base64.
+		var rawBytes []byte
+		var v4Payload string
+		if b64, _ := att["Base64Encoded"].(bool); b64 {
+			rawBytes, _ = base64.StdEncoding.DecodeString(payloadStr)
+			v4Payload = payloadStr
+		} else {
+			rawBytes = []byte(payloadStr)
+			v4Payload = base64.StdEncoding.EncodeToString(rawBytes)
+		}
+		sum := sha256.Sum256(rawBytes)
+
+		contentType, _ := att["ContentType"].(string)
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
 		ev := map[string]interface{}{
-			"content_type": att["ContentType"],
-			"payload":      dataStr,
+			"content_type": contentType,
+			"payload":      v4Payload,
 			"hash":         "sha256:" + hex.EncodeToString(sum[:]),
-			"size":         len(decoded),
+			"size":         len(rawBytes),
 		}
 		if desc, ok := att["Description"].(string); ok && desc != "" {
 			ev["description"] = desc
 		} else {
-			appendWarning(warnings, "Evidence attachment has no description, omitting field")
+			appendWarning(warnings, "Evidence sample has no description, omitting field")
 		}
 		out = append(out, ev)
 	}
@@ -222,22 +265,41 @@ func convertV3Evidence(report map[string]interface{}, warnings *[]string) []inte
 }
 
 // addV3CategoryFields mirrors addCategorySpecificFields().
-func addV3CategoryFields(v4 map[string]interface{}, category Category, report map[string]interface{}) error {
+func addV3CategoryFields(v4 map[string]interface{}, category Category, report map[string]interface{}, warnings *[]string) error {
 	switch category {
 	case CategoryMessaging:
-		return addV3MessagingFields(v4, report)
+		return addV3MessagingFields(v4, report, warnings)
 	case CategoryConnection:
-		return addV3ConnectionFields(v4, report)
+		return addV3ConnectionFields(v4, report, warnings)
 	case CategoryContent:
 		return addV3ContentFields(v4, report)
+	case CategoryCopyright:
+		return addV3CopyrightFields(v4, report)
 	}
 	return nil
 }
 
-func addV3MessagingFields(v4, report map[string]interface{}) error {
+func addV3CopyrightFields(v4, report map[string]interface{}) error {
+	// v4 copyright/copyright requires infringing_url; v3 carries it as SourceUrl.
+	url := stringOr(report["SourceUrl"], stringOr(report["Url"], ""))
+	if url == "" {
+		return NewParseError(
+			"cannot convert v3 report: missing SourceUrl for copyright type. Copyright reports require an infringing URL", nil)
+	}
+	v4["infringing_url"] = url
+	if wt := stringOr(report["InfringedMaterial"], ""); wt != "" {
+		v4["work_title"] = wt
+	}
+	return nil
+}
+
+func addV3MessagingFields(v4, report map[string]interface{}, warnings *[]string) error {
 	protocol := stringOr(report["Protocol"], additionalInfoString(report, "Protocol"))
 	if protocol == "" {
-		return NewParseError("cannot convert v3 report: missing protocol for messaging type", nil)
+		// XARF v3 messaging reports carry no Protocol field; v4 messaging types
+		// require one. Default to smtp (the only messaging transport v3 modeled).
+		protocol = "smtp"
+		appendWarning(warnings, `No Protocol in v3 messaging report, defaulting to "smtp"`)
 	}
 	v4["protocol"] = protocol
 	if from := stringOr(report["SmtpMailFromAddress"], additionalInfoString(report, "SMTPFrom")); from != "" {
@@ -255,10 +317,13 @@ func addV3MessagingFields(v4, report map[string]interface{}) error {
 	return nil
 }
 
-func addV3ConnectionFields(v4, report map[string]interface{}) error {
+func addV3ConnectionFields(v4, report map[string]interface{}, warnings *[]string) error {
 	protocol, _ := report["Protocol"].(string)
 	if protocol == "" {
-		return NewParseError("cannot convert v3 report: missing protocol for connection type", nil)
+		// XARF v3 connection reports carry no Protocol field; v4 connection types
+		// require one. Default to tcp (the common transport for scan/login/ddos).
+		protocol = "tcp"
+		appendWarning(warnings, `No Protocol in v3 connection report, defaulting to "tcp"`)
 	}
 	if dst, ok := report["DestinationIp"].(string); ok && dst != "" {
 		v4["destination_ip"] = dst
@@ -270,7 +335,12 @@ func addV3ConnectionFields(v4, report map[string]interface{}) error {
 	if dp, ok := numberValue(report["DestinationPort"]); ok {
 		v4["destination_port"] = dp
 	}
-	v4["first_seen"] = report["Date"]
+	// Prefer the schema's FirstSeen; fall back to the report Date.
+	if fs := stringOr(report["FirstSeen"], ""); fs != "" {
+		v4["first_seen"] = fs
+	} else {
+		v4["first_seen"] = report["Date"]
+	}
 	if ac, ok := numberValue(report["AttackCount"]); ok {
 		v4["attack_count"] = ac
 	}
@@ -278,7 +348,9 @@ func addV3ConnectionFields(v4, report map[string]interface{}) error {
 }
 
 func addV3ContentFields(v4, report map[string]interface{}) error {
-	url := stringOr(report["Url"], additionalInfoString(report, "URL"))
+	// SourceUrl is the schema-canonical field; Url/AdditionalInfo.URL/Source.URL
+	// are accepted as fallbacks for other v3 dialects.
+	url := stringOr(report["SourceUrl"], stringOr(report["Url"], additionalInfoString(report, "URL")))
 	if url == "" {
 		if src, ok := report["Source"].(map[string]interface{}); ok {
 			url, _ = src["URL"].(string)

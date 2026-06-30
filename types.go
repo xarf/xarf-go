@@ -16,7 +16,7 @@ const SpecVersion = XARFVersion
 const BundledSpecVersion = "v4.2.0"
 
 // Version is the version of this library (mirrors the JavaScript library's VERSION).
-const Version = "1.1.0"
+const Version = "1.1.1"
 
 // Category represents the XARF report category
 type Category string
