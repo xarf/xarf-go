@@ -106,7 +106,10 @@ func Parse(data []byte, options *ParseOptions) (ParseResult, error) {
 	if IsXARFv3(obj) {
 		converted, err := ConvertV3toV4(obj, &warnings)
 		if err != nil {
-			return ParseResult{}, err
+			// A detected-but-unconvertible v3 report is a validation failure, not
+			// malformed input — surface it in Errors per the documented contract
+			// (a Go error is reserved for invalid JSON / MaxInputBytes).
+			return ParseResult{Report: obj, Errors: []string{err.Error()}, Warnings: warnings}, nil
 		}
 		warnings = append([]string{GetV3DeprecationWarning()}, warnings...)
 		obj = converted

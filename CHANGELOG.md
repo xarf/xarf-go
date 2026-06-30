@@ -5,6 +5,54 @@ All notable changes to the xarf-go library will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-06-30
+
+### Fixed
+
+- **v3→v4 conversion now accepts the deployed XARF v3 dialect.** The converter
+  recognized only the JavaScript library's spellings; production v3 traffic uses
+  the v3-schema spellings, which were rejected. Specifically:
+  - Added schema spellings `DOS`, `PortScan`, `LoginAttack` as aliases for
+    `ddos`/`port_scan`/`login_attack` (the hyphenated JS spellings are retained).
+  - `extractV3SourceIdentifier` and content conversion now read `SourceUrl` (the
+    schema-canonical URL field for content reports such as Phishing/Malware) —
+    fixes "missing URL for content type" on real reports that carry only `SourceUrl`.
+  - Messaging and connection conversion no longer hard-error when the v3 report
+    has no `Protocol` field (the v3 schema defines none); they default to `smtp`
+    and `tcp` respectively (with a warning) so the converted v4 report satisfies
+    the v4.2.0 type-required `protocol` field.
+- **`Parse` no longer returns a Go error when a detected v3 report fails to
+  convert.** Such a report is a validation failure, so the message is now returned
+  in `ParseResult.Errors`, matching the documented contract that a Go error is
+  reserved for invalid JSON or `MaxInputBytes` overflow.
+- **v3 evidence samples are no longer silently dropped.** `convertV3Evidence`
+  read `att["Data"]`, but the v3 schema names the field `Payload`, so every
+  converted report carried empty evidence (`payload:""`, `size:0`). It now reads
+  `Payload` (with `Data` as a dialect fallback), honors `Base64Encoded` to decide
+  whether the source is already base64, and emits a v4 `evidence_item` whose
+  `payload` is base64-encoded with `hash`/`size` over the decoded bytes. The
+  source array is now `Report.Samples` first (schema-canonical), then `Attachment`.
+- **`Copyright` reports now convert.** A `CategoryCopyright` case maps the v3
+  `SourceUrl` to the v4 `copyright/copyright` required field `infringing_url`
+  (and `InfringedMaterial` → `work_title`); previously copyright reports converted
+  to a v4 doc missing `infringing_url` and failed validation.
+- **`description` is read from the schema field `ReporterNotes`** (the converter
+  previously read a non-existent `AttackDescription`, so descriptions were always
+  empty); `AttackDescription` is retained as a fallback.
+- **Connection `first_seen` prefers the v3 `FirstSeen` field**, falling back to
+  the report `Date`.
+
+### Notes
+
+- The v3 ReportTypes `ChildAbuse`, `Trademark`, `Exploit`, `OpenService`,
+  `WebCrawler`, and `PotentiallyCompromisedAccount` remain unmapped: they have no
+  v4.2.0 type, or their v4 type requires fields the converter cannot derive from
+  v3 data. They produce a clear "unknown ReportType" error rather than an invalid
+  v4 document. Mapping them is tracked for a follow-up change.
+- `Botnet` still maps to `infrastructure/botnet`, whose v4.2.0 schema requires
+  `compromise_evidence` — a field with no v3 equivalent — so botnet reports
+  convert but fail v4 validation until that mapping is resolved.
+
 ## [1.1.0] - 2026-06-23
 
 Behavioural parity with the official JavaScript library ([`@xarf/xarf`](https://www.npmjs.com/package/@xarf/xarf)).
