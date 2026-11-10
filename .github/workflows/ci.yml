@@ -88,7 +88,7 @@ jobs:
           cache: true
 
       - name: Run gosec security scanner
-        uses: securego/gosec@master
+        uses: securego/gosec@deb54465fea23d19a77f037e11e6589021f8501d # v2.29.0
         with:
           args: '-no-fail -fmt sarif -out results.sarif ./...'
 
@@ -108,7 +108,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.23'
+          go-version: '1.26'
           cache: true
 
       - name: Download dependencies
@@ -118,6 +118,8 @@ jobs:
         uses: dominikh/staticcheck-action@v1
         with:
           version: "latest"
+          # staticcheck 2026.2.1 breaks on Go 1.27.2 (dominikh/go-tools#1832)
+          install-go: false
 
       - name: Run go-critic
         run: |
